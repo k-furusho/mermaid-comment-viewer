@@ -1,0 +1,141 @@
+{
+  "name": "mermaid-inline-viewer",
+  "displayName": "Mermaid Inline Viewer",
+  "description": "Preview Mermaid diagrams directly in your code comments. Supports TypeScript, Python, Go, and Rust with instant hover previews.",
+  "version": "0.1.0",
+  "publisher": "k-furusho",
+  "author": {
+    "name": "k-furusho"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/k-furusho/mermaid-inline-viewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/k-furusho/mermaid-inline-viewer/issues"
+  },
+  "homepage": "https://github.com/k-furusho/mermaid-inline-viewer#readme",
+  "engines": {
+    "vscode": "^1.95.0",
+    "node": ">=24.0.0"
+  },
+  "categories": [
+    "Visualization",
+    "Programming Languages",
+    "Documentation",
+    "Other"
+  ],
+  "keywords": [
+    "mermaid",
+    "diagram",
+    "preview",
+    "comment",
+    "documentation",
+    "typescript",
+    "python",
+    "go",
+    "rust",
+    "flowchart",
+    "uml",
+    "architecture",
+    "visualization",
+    "ddd"
+  ],
+  "icon": "media/icon.png",
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mermaidInlineViewer.showPreview",
+        "title": "Mermaid: Show Preview",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "mermaidInlineViewer.exportImage",
+        "title": "Mermaid: Export as Image",
+        "icon": "$(device-camera)"
+      },
+      {
+        "command": "mermaidInlineViewer.refreshPreview",
+        "title": "Mermaid: Refresh Preview",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "mermaidInlineViewer.showPreview",
+          "when": "editorLangId =~ /(typescript|javascript|python|go|rust)/",
+          "group": "mermaid"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Mermaid Inline Viewer",
+      "properties": {
+        "mermaidInlineViewer.theme": {
+          "type": "string",
+          "default": "default",
+          "enum": [
+            "default",
+            "dark",
+            "forest",
+            "neutral",
+            "base"
+          ],
+          "enumDescriptions": [
+            "Default theme",
+            "Dark theme",
+            "Forest theme",
+            "Neutral theme",
+            "Base theme (Mermaid v11)"
+          ],
+          "description": "Mermaid diagram theme"
+        },
+        "mermaidInlineViewer.autoPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically show preview on hover"
+        },
+        "mermaidInlineViewer.debounceDelay": {
+          "type": "number",
+          "default": 300,
+          "minimum": 100,
+          "maximum": 2000,
+          "description": "Debounce delay for real-time preview (ms)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vscode-test",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.95.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.16.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "mermaid": "^11.4.0"
+  }
+}
