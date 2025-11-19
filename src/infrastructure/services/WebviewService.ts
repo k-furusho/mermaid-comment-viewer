@@ -2,7 +2,11 @@ import * as vscode from 'vscode';
 
 export class WebviewService {
   private static currentPanel: vscode.WebviewPanel | undefined;
-  private static lastMermaidCode: string | undefined;
+  private static extensionUri: vscode.Uri | undefined;
+
+  public static initialize(context: vscode.ExtensionContext): void {
+    WebviewService.extensionUri = context.extensionUri;
+  }
 
   public static hasActivePanel(): boolean {
     return WebviewService.currentPanel !== undefined && WebviewService.currentPanel.visible;
@@ -11,12 +15,20 @@ export class WebviewService {
   public static refresh(): void {
     if (WebviewService.currentPanel && WebviewService.lastMermaidCode) {
       console.log('[WebviewService] Refreshing preview');
-      WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(WebviewService.lastMermaidCode);
+      WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(
+        WebviewService.currentPanel.webview,
+        WebviewService.lastMermaidCode
+      );
     }
   }
 
   public static showPreview(mermaidCode: string): void {
     console.log('[WebviewService] Showing preview for code:', mermaidCode.substring(0, 100));
+
+    if (!WebviewService.extensionUri) {
+      console.error('[WebviewService] Extension URI not set. Call initialize() first.');
+      return;
+    }
 
     // save the latest code
     WebviewService.lastMermaidCode = mermaidCode;
@@ -34,7 +46,10 @@ export class WebviewService {
     if (WebviewService.currentPanel) {
       // display the existing panel in the appropriate position
       WebviewService.currentPanel.reveal(targetColumn, false); // preserveFocus = false
-      WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(mermaidCode);
+      WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(
+        WebviewService.currentPanel.webview,
+        mermaidCode
+      );
 
       // update the title to show the latest preview
       WebviewService.currentPanel.title = 'Mermaid Preview';
@@ -52,11 +67,16 @@ export class WebviewService {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: []
+        localResourceRoots: [
+          vscode.Uri.joinPath(WebviewService.extensionUri, 'media')
+        ]
       }
     );
 
-    WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(mermaidCode);
+    WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(
+      WebviewService.currentPanel.webview,
+      mermaidCode
+    );
 
     // if the panel is disposed, clear the reference
     WebviewService.currentPanel.onDidDispose(() => {
@@ -70,7 +90,15 @@ export class WebviewService {
     });
   }
 
-  private static getHtmlContent(mermaidCode: string): string {
+  private static getHtmlContent(webview: vscode.Webview, mermaidCode: string): string {
+    if (!WebviewService.extensionUri) {
+      return '';
+    }
+
+    const mermaidUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(WebviewService.extensionUri, 'media', 'mermaid.esm.min.mjs')
+    );
+
     // escape the Mermaid code
     const escapedCode = mermaidCode
       .replace(/&/g, '&amp;')
@@ -88,7 +116,7 @@ export class WebviewService {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mermaid Preview</title>
   <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    import mermaid from '${mermaidUri}';
 
     // initialize Mermaid - use a light theme with custom colors
     mermaid.initialize({

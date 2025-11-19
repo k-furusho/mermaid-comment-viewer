@@ -5,6 +5,9 @@ import { MermaidCodeLensProvider } from './presentation/providers/CodeLensProvid
 import { WebviewService } from './infrastructure/services/WebviewService';
 
 export function activate(context: vscode.ExtensionContext): void {
+  // Initialize WebviewService with extension context
+  WebviewService.initialize(context);
+
   vscode.window.showInformationMessage('🎉 Mermaid Comment Viewer activated!');
 
   const supportedLanguages = ['typescript', 'javascript', 'python', 'go', 'rust'];

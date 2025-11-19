@@ -118,7 +118,9 @@ export class WebviewOverlayProvider {
         {
           enableScripts: true,
           retainContextWhenHidden: true,
-          localResourceRoots: []
+          localResourceRoots: [
+            vscode.Uri.joinPath(this.context.extensionUri, 'media')
+          ]
         }
       );
 
@@ -128,11 +130,15 @@ export class WebviewOverlayProvider {
     }
 
     // generate the HTML content for the Webview Overlay
-    const html = this.generateHtml(blocks);
+    const html = this.generateHtml(blocks, this.overlayPanel.webview);
     this.overlayPanel.webview.html = html;
   }
 
-  private generateHtml(blocks: Array<{ code: any; range: any }>): string {
+  private generateHtml(blocks: Array<{ code: any; range: any }>, webview: vscode.Webview): string {
+    const mermaidUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, 'media', 'mermaid.min.js')
+    );
+
     const diagrams = blocks.map((block, index) => {
       const code = (block.code as string).replace(/`/g, '\\`');
       return `
@@ -150,7 +156,7 @@ ${code}
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+          <script src="${mermaidUri}"></script>
           <style>
             body {
               margin: 0;

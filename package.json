@@ -18,7 +18,7 @@
   "homepage": "https://github.com/k-furusho/mermaid-comment-viewer#readme",
   "engines": {
     "vscode": "^1.95.0",
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "categories": [
     "Visualization",
