@@ -1,26 +1,53 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+import { MermaidHoverProvider } from './presentation/providers/HoverProvider';
+import { MermaidCodeLensProvider } from './presentation/providers/CodeLensProvider';
+import { WebviewService } from './infrastructure/services/WebviewService';
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "mermaid-inline-viewer" is now active!');
+export function activate(context: vscode.ExtensionContext): void {
+  vscode.window.showInformationMessage('🎉 Mermaid Comment Viewer activated!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('mermaid-inline-viewer.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Mermaid Inline Viewer!');
-	});
+  const supportedLanguages = ['typescript', 'javascript', 'python', 'go', 'rust'];
 
-	context.subscriptions.push(disposable);
+  // Hover Provider登録
+  const hoverProvider = new MermaidHoverProvider();
+  for (const language of supportedLanguages) {
+    const disposable = vscode.languages.registerHoverProvider(language, hoverProvider);
+    context.subscriptions.push(disposable);
+    console.log(`[Extension] Registered hover provider for: ${language}`);
+  }
+
+  // CodeLens Provider登録
+  const codeLensProvider = new MermaidCodeLensProvider();
+  for (const language of supportedLanguages) {
+    const disposable = vscode.languages.registerCodeLensProvider(
+      { language: language },
+      codeLensProvider
+    );
+    context.subscriptions.push(disposable);
+    console.log(`[Extension] Registered CodeLens provider for: ${language}`);
+  }
+
+  const showPreviewCommand = vscode.commands.registerCommand(
+    'mermaidInlineViewer.showPreview',
+    (mermaidCode?: string) => {
+      if (mermaidCode) {
+        WebviewService.showPreview(mermaidCode);
+      } else {
+        vscode.window.showWarningMessage('No Mermaid code provided');
+      }
+    }
+  );
+
+  context.subscriptions.push(showPreviewCommand);
+
+  const refreshPreviewCommand = vscode.commands.registerCommand(
+    'mermaidInlineViewer.refreshPreview',
+    () => {
+      WebviewService.refresh();
+    }
+  );
+  context.subscriptions.push(refreshPreviewCommand);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}

@@ -1,8 +1,8 @@
 {
-  "name": "mermaid-inline-viewer",
-  "displayName": "Mermaid Inline Viewer",
-  "description": "Preview Mermaid diagrams directly in your code comments. Supports TypeScript, Python, Go, and Rust with instant hover previews.",
-  "version": "0.1.0",
+  "name": "mermaid-comment-viewer",
+  "displayName": "Mermaid Comment Viewer",
+  "description": "Visualize Mermaid diagrams from code comments with CodeLens, Hover, and an interactive Preview Panel (Zoom/Pan supported).",
+  "version": "1.0.0",
   "publisher": "k-furusho",
   "author": {
     "name": "k-furusho"
@@ -10,40 +10,42 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/k-furusho/mermaid-inline-viewer.git"
+    "url": "https://github.com/k-furusho/mermaid-comment-viewer.git"
   },
   "bugs": {
-    "url": "https://github.com/k-furusho/mermaid-inline-viewer/issues"
+    "url": "https://github.com/k-furusho/mermaid-comment-viewer/issues"
   },
-  "homepage": "https://github.com/k-furusho/mermaid-inline-viewer#readme",
+  "homepage": "https://github.com/k-furusho/mermaid-comment-viewer#readme",
   "engines": {
     "vscode": "^1.95.0",
-    "node": ">=24.0.0"
+    "node": ">=18.0.0"
   },
   "categories": [
     "Visualization",
     "Programming Languages",
-    "Documentation",
-    "Other"
+    "Documentation"
   ],
   "keywords": [
     "mermaid",
     "diagram",
     "preview",
     "comment",
-    "documentation",
+    "visualization",
+    "zoom",
+    "pan",
     "typescript",
     "python",
     "go",
-    "rust",
-    "flowchart",
-    "uml",
-    "architecture",
-    "visualization",
-    "ddd"
+    "rust"
   ],
   "icon": "media/icon.png",
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "onLanguage:python",
+    "onLanguage:go",
+    "onLanguage:rust"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -73,39 +75,8 @@
       ]
     },
     "configuration": {
-      "title": "Mermaid Inline Viewer",
+      "title": "Mermaid Comment Viewer",
       "properties": {
-        "mermaidInlineViewer.theme": {
-          "type": "string",
-          "default": "default",
-          "enum": [
-            "default",
-            "dark",
-            "forest",
-            "neutral",
-            "base"
-          ],
-          "enumDescriptions": [
-            "Default theme",
-            "Dark theme",
-            "Forest theme",
-            "Neutral theme",
-            "Base theme (Mermaid v11)"
-          ],
-          "description": "Mermaid diagram theme"
-        },
-        "mermaidInlineViewer.autoPreview": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically show preview on hover"
-        },
-        "mermaidInlineViewer.debounceDelay": {
-          "type": "number",
-          "default": 300,
-          "minimum": 100,
-          "maximum": 2000,
-          "description": "Debounce delay for real-time preview (ms)"
-        }
       }
     }
   },

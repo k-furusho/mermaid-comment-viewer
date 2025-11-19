@@ -1,71 +1,78 @@
-# mermaid-inline-viewer README
+# Mermaid Comment Viewer
 
-This is the README for your extension "mermaid-inline-viewer". After writing up a brief description, we recommend including the following sections.
+A VS Code extension that helps you visualize Mermaid diagrams directly from your code comments.
 
-## Features
+![Mermaid Preview](media/demo.gif)
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## ✨ Features
 
-For example if there is an image subfolder under your extension project workspace:
+- **💬 Code Comment Support**: Write Mermaid diagrams in block comments or docstrings.
+- **🔍 Interactive Preview Panel**: View diagrams in a dedicated side panel with **Zoom** and **Pan** support.
+- **🖱️ Hover Preview**: Quickly glance at diagrams by hovering over the Mermaid code.
+- **⚡ CodeLens Integration**: One-click "Show Preview" button above every Mermaid block.
+- **🌍 Multi-Language**: Supports TypeScript, JavaScript, Python, Go, and Rust.
 
-\!\[feature X\]\(images/feature-x.png\)
+## 🚀 Usage
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### 1. Write Mermaid Code in Comments
 
-## Requirements
+Add a `mermaid` keyword to your comment block:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+**TypeScript / JavaScript / Go / Rust:**
+```typescript
+/* mermaid
+graph TD
+    A[Client] --> B[Load Balancer]
+    B --> C[Server01]
+    B --> D[Server02]
+*/
+```
 
-## Extension Settings
+**Python:**
+```python
+"""mermaid
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>Bob: Hello Bob, how are you?
+    Bob-->>Alice: I am good thanks!
+"""
+```
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+### 2. View the Diagram
 
-For example:
+You have three ways to view the diagram:
 
-This extension contributes the following settings:
+1.  **CodeLens**: Click the `Show Preview` text appearing above the comment block.
+2.  **Hover**: Hover your mouse cursor over the `mermaid` keyword.
+3.  **Command**: Run `Mermaid: Show Preview` from the Command Palette.
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+### 3. Interact with the Preview
 
-## Known Issues
+The preview panel supports:
+- **Zoom In/Out**: Use the toolbar buttons `+` / `-` or `Ctrl` + `Mouse Wheel`.
+- **Pan**: Drag the diagram with your mouse to move it around.
+- **Reset**: Click the `↺` button to reset the view.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## 📦 Installation
 
-## Release Notes
+1. Open VS Code
+2. Press `Ctrl+P` / `Cmd+P`
+3. Type `ext install k-furusho.mermaid-comment-viewer`
 
-Users appreciate release notes as you update your extension.
+## 🛠️ Supported Languages
 
-### 1.0.0
+| Language | Syntax |
+|----------|--------|
+| **TypeScript / JS** | `/* mermaid ... */` |
+| **Go** | `/* mermaid ... */` |
+| **Rust** | `/* mermaid ... */` or `//! mermaid` |
+| **Python** | `"""mermaid ... """` or `'''mermaid ... '''` |
 
-Initial release of ...
+## 🤝 Contributing
 
-### 1.0.1
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Fixed issue #.
+## 📄 License
 
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+MIT

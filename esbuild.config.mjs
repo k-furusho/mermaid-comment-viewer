@@ -13,7 +13,9 @@ async function main() {
     sourcesContent: false,
     platform: 'node',
     outfile: 'out/extension.js',
-    external: ['vscode'],
+    external: [
+      'vscode'
+    ],
     logLevel: 'silent',
     plugins: [
       /* プラグイン追加可能 */
