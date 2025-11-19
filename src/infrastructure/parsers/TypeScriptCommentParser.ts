@@ -19,47 +19,49 @@ export class TypeScriptCommentParser implements ICommentParser {
   private readonly docCommentPattern = /\/\*\*\s*mermaid\s*((?:\s*\*.*\n)+)\s*\*\//gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
-    const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
-
+    try {
       // block comment pattern
-    const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
+      const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
 
-    for (const match of blockMatches) {
-      const rawCode = match[1];
-      console.log('[TypeScriptCommentParser] Raw match code:', rawCode);
+      for (const match of blockMatches) {
+        const rawCode = match[1];
+        console.log('[TypeScriptCommentParser] Raw match code:', rawCode);
 
-      if (rawCode) {
-        // trim the code and remove extra whitespace
-        const code = rawCode.trim();
+        if (rawCode) {
+          // trim the code and remove extra whitespace
+          const code = rawCode.trim();
 
-        // skip invalid Mermaid code (contains JSON syntax)
-        if (code.includes('"mermaidInlineViewer') || code.includes('": {')) {
-          console.warn('[TypeScriptCommentParser] Skipping invalid Mermaid code (contains JSON syntax)');
-          continue;
-        }
+          // skip invalid Mermaid code (contains JSON syntax)
+          if (code.includes('"mermaidInlineViewer') || code.includes('": {')) {
+            console.warn('[TypeScriptCommentParser] Skipping invalid Mermaid code (contains JSON syntax)');
+            continue;
+          }
 
-        const codeResult = MC.create(code);
-        if (R.isOk(codeResult)) {
-          const startLine = this.getLineNumber(text, match.index ?? 0);
-          const endLine = this.getLineNumber(text, (match.index ?? 0) + match[0].length - 1);
+          const codeResult = MC.create(code);
+          if (R.isOk(codeResult)) {
+            const startLine = this.getLineNumber(text, match.index ?? 0);
+            const endLine = this.getLineNumber(text, (match.index ?? 0) + match[0].length - 1);
 
-          console.log('[TypeScriptCommentParser] Line range:', startLine, '-', endLine);
+            console.log('[TypeScriptCommentParser] Line range:', startLine, '-', endLine);
 
-          const startLN = LN.create(startLine);
-          const endLN = LN.create(endLine);
+            const startLN = LN.create(startLine);
+            const endLN = LN.create(endLine);
 
-          if (R.isOk(startLN) && R.isOk(endLN)) {
-            const rangeResult = CR.create(startLN.value, endLN.value);
-            if (R.isOk(rangeResult)) {
-              results.push({ code: codeResult.value, range: rangeResult.value });
+            if (R.isOk(startLN) && R.isOk(endLN)) {
+              const rangeResult = CR.create(startLN.value, endLN.value);
+              if (R.isOk(rangeResult)) {
+                results.push({ code: codeResult.value, range: rangeResult.value });
+              }
             }
           }
         }
       }
-    }
 
-    console.log('[TypeScriptCommentParser] Total results:', results.length);
-    return R.ok(results);
+      console.log('[TypeScriptCommentParser] Total results:', results.length);
+      return R.ok(results);
+    } catch (error) {
+      return R.err(new ParseError(error instanceof Error ? error.message : 'Unknown parse error'));
+    }
   }
 
   private getLineNumber(text: string, index: number): number {

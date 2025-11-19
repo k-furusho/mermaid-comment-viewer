@@ -120,7 +120,7 @@ export class WebviewService {
 
     // initialize Mermaid - use a light theme with custom colors
     mermaid.initialize({
-      startOnLoad: true,
+      startOnLoad: false,
       theme: 'base',
       themeVariables: {
         // background and basic colors
@@ -372,8 +372,27 @@ ${escapedCode}
         }
       });
 
-      // after the loading is complete, display smoothly
-      window.addEventListener('load', () => {
+        try {
+          await mermaid.parse(\`\${document.querySelector('.mermaid').textContent}\`);
+          await mermaid.run();
+        } catch (error) {
+          const errorContainer = document.getElementById('error-container');
+          const mermaidWrapper = document.querySelector('.mermaid-wrapper');
+
+          errorContainer.innerHTML = \`
+            <div class="error">
+              <h3>⚠️ Syntax Error</h3>
+              <p>\${error.message || 'Unknown error occurred'}</p>
+              <div class="code-block">
+                <pre>\${document.querySelector('.mermaid').textContent}</pre>
+              </div>
+            </div>
+          \`;
+
+          if (mermaidWrapper) {
+            mermaidWrapper.style.display = 'none';
+          }
+        }
         console.log('Mermaid diagram loaded successfully');
       });
     </script>

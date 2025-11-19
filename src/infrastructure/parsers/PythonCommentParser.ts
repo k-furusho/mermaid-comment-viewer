@@ -22,25 +22,29 @@ export class PythonCommentParser implements ICommentParser {
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
 
-    // Double quote docstring解析
-    const doubleQuoteMatches = Array.from(text.matchAll(this.doubleQuotePattern));
-    for (const match of doubleQuoteMatches) {
-      const code = match[1];
-      if (code) {
-        this.processMatch(text, match, code, results);
+    try {
+      // Double quote docstring解析
+      const doubleQuoteMatches = Array.from(text.matchAll(this.doubleQuotePattern));
+      for (const match of doubleQuoteMatches) {
+        const code = match[1];
+        if (code) {
+          this.processMatch(text, match, code, results);
+        }
       }
-    }
 
-    // Single quote docstring解析
-    const singleQuoteMatches = Array.from(text.matchAll(this.singleQuotePattern));
-    for (const match of singleQuoteMatches) {
-      const code = match[1];
-      if (code) {
-        this.processMatch(text, match, code, results);
+      // Single quote docstring解析
+      const singleQuoteMatches = Array.from(text.matchAll(this.singleQuotePattern));
+      for (const match of singleQuoteMatches) {
+        const code = match[1];
+        if (code) {
+          this.processMatch(text, match, code, results);
+        }
       }
-    }
 
-    return R.ok(results);
+      return R.ok(results);
+    } catch (error) {
+      return R.err(new ParseError(error instanceof Error ? error.message : 'Unknown parse error'));
+    }
   }
 
   private processMatch(
