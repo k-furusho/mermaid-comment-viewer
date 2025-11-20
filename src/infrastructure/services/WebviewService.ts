@@ -108,6 +108,11 @@ export class WebviewService {
       .replace(/'/g, '&#039;');
 
     // detect the VSCode theme and determine the Mermaid theme
+    const config = vscode.workspace.getConfiguration('mermaidInlineViewer');
+    const theme = config.get<string>('theme', 'base');
+    const fontSize = config.get<number>('fontSize', 16);
+    const backgroundColor = config.get<string>('backgroundColor', 'transparent');
+
     // use the dark theme and apply custom colors
     return `<!DOCTYPE html>
 <html lang="en">
@@ -121,8 +126,9 @@ export class WebviewService {
     // initialize Mermaid - use a light theme with custom colors
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'base',
+      theme: '${theme}',
       themeVariables: {
+        fontSize: '${fontSize}px',
         // background and basic colors
         primaryColor: '#e8f4fd',
         primaryTextColor: '#1a1a1a',
@@ -162,6 +168,9 @@ export class WebviewService {
       },
       securityLevel: 'loose'
     });
+
+    // Manually run mermaid to render diagrams
+    await mermaid.run();
   </script>
   <style>
     * {
@@ -220,7 +229,7 @@ export class WebviewService {
     }
     .mermaid {
       display: inline-block;
-      background-color: #ffffff;
+      background-color: ${backgroundColor === 'transparent' ? 'var(--vscode-editor-background)' : backgroundColor};
       padding: 32px;
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
