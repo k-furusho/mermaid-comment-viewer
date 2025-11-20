@@ -168,6 +168,9 @@ export class WebviewService {
       },
       securityLevel: 'loose'
     });
+
+    // Manually run mermaid to render diagrams
+    await mermaid.run();
   </script>
   <style>
     * {
