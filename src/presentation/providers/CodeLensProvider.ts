@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import type { Language } from '../../domain/types/BrandedTypes';
 import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
-import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
+import type { Language } from '../../domain/types/BrandedTypes';
 import { GoCommentParser } from '../../infrastructure/parsers/GoCommentParser';
-import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
 import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
+import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
+import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
 
 export class MermaidCodeLensProvider implements vscode.CodeLensProvider {
   private readonly parsers: Map<Language, ICommentParser>;
@@ -48,7 +48,7 @@ export class MermaidCodeLensProvider implements vscode.CodeLensProvider {
       const command: vscode.Command = {
         title: '$(open-preview) Preview Mermaid Diagram',
         command: 'mermaidInlineViewer.showPreview',
-        arguments: [block.code]
+        arguments: [block.code],
       };
 
       codeLenses.push(new vscode.CodeLens(range, command));
@@ -58,4 +58,3 @@ export class MermaidCodeLensProvider implements vscode.CodeLensProvider {
     return codeLenses;
   }
 }
-

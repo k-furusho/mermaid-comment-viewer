@@ -1,15 +1,15 @@
-import * as assert from 'assert';
-import { TypeScriptCommentParser } from '../../src/infrastructure/parsers/TypeScriptCommentParser';
-import { PythonCommentParser } from '../../src/infrastructure/parsers/PythonCommentParser';
-import { GoCommentParser } from '../../src/infrastructure/parsers/GoCommentParser';
-import { RustCommentParser } from '../../src/infrastructure/parsers/RustCommentParser';
+import * as assert from 'node:assert';
 import { Result } from '../../src/domain/types/Result';
+import { GoCommentParser } from '../../src/infrastructure/parsers/GoCommentParser';
+import { PythonCommentParser } from '../../src/infrastructure/parsers/PythonCommentParser';
+import { RustCommentParser } from '../../src/infrastructure/parsers/RustCommentParser';
+import { TypeScriptCommentParser } from '../../src/infrastructure/parsers/TypeScriptCommentParser';
 
 suite('Parser Error Handling Test Suite', () => {
   test('TypeScript Parser handles invalid regex gracefully', () => {
     const parser = new TypeScriptCommentParser();
     // Simulate a very long string that might cause regex performance issues, though hard to trigger actual error with simple regex
-    const longString = '/* mermaid ' + 'graph TD; A-->B; '.repeat(1000) + ' */';
+    const longString = `/* mermaid ${'graph TD; A-->B; '.repeat(1000)} */`;
     const result = parser.parse(longString);
     assert.ok(Result.isOk(result));
   });
@@ -26,7 +26,8 @@ suite('Parser Error Handling Test Suite', () => {
 
   test('Python Parser handles mixed quote styles', () => {
     const parser = new PythonCommentParser();
-    const mixedQuotes = '"""\nmermaid\ngraph TD;\nA-->B;\n"""\n' + "'''\nmermaid\ngraph TD;\nC-->D;\n'''";
+    const mixedQuotes =
+      '"""\nmermaid\ngraph TD;\nA-->B;\n"""\n' + "'''\nmermaid\ngraph TD;\nC-->D;\n'''";
     const result = parser.parse(mixedQuotes);
     assert.ok(Result.isOk(result));
     if (Result.isOk(result)) {
@@ -49,7 +50,7 @@ suite('Parser Error Handling Test Suite', () => {
       new TypeScriptCommentParser(),
       new PythonCommentParser(),
       new GoCommentParser(),
-      new RustCommentParser()
+      new RustCommentParser(),
     ];
 
     for (const parser of parsers) {
@@ -61,4 +62,3 @@ suite('Parser Error Handling Test Suite', () => {
     }
   });
 });
-

@@ -23,7 +23,7 @@ export const MermaidCode = {
       return Result.err(new ValidationError('Empty mermaid code'));
     }
     return Result.ok(trimmed as MermaidCode);
-  }
+  },
 };
 
 export const LineNumber = {
@@ -32,5 +32,5 @@ export const LineNumber = {
       return Result.err(new ValidationError('Line number must be non-negative'));
     }
     return Result.ok(value as LineNumber);
-  }
+  },
 };

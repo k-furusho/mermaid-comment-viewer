@@ -2,10 +2,10 @@ import type { LineNumber } from '../types/BrandedTypes';
 import type { Result } from '../types/Result';
 import { Result as R } from '../types/Result';
 
-class RangeError extends Error {
+class CodeRangeError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'RangeError';
+    this.name = 'CodeRangeError';
   }
 }
 
@@ -15,12 +15,9 @@ export class CodeRange {
     public readonly end: LineNumber
   ) {}
 
-  static create(
-    start: LineNumber,
-    end: LineNumber
-  ): Result<CodeRange, RangeError> {
+  static create(start: LineNumber, end: LineNumber): Result<CodeRange, CodeRangeError> {
     if (end < start) {
-      return R.err(new RangeError('End must be >= start'));
+      return R.err(new CodeRangeError('End must be >= start'));
     }
     return R.ok(new CodeRange(start, end));
   }
