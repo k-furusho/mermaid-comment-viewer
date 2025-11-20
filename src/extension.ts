@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
-import { MermaidHoverProvider } from './presentation/providers/HoverProvider';
-import { MermaidCodeLensProvider } from './presentation/providers/CodeLensProvider';
 import { WebviewService } from './infrastructure/services/WebviewService';
+import { MermaidCodeLensProvider } from './presentation/providers/CodeLensProvider';
+import { MermaidHoverProvider } from './presentation/providers/HoverProvider';
 
 export function activate(context: vscode.ExtensionContext): void {
   // Initialize WebviewService with extension context
-  WebviewService.initialize(context);
+  WebviewService.getInstance().initialize(context);
 
   vscode.window.showInformationMessage('🎉 Mermaid Comment Viewer activated!');
 
@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext): void {
     'mermaidInlineViewer.showPreview',
     (mermaidCode?: string) => {
       if (mermaidCode) {
-        WebviewService.showPreview(mermaidCode);
+        WebviewService.getInstance().showPreview(mermaidCode);
       } else {
         vscode.window.showWarningMessage('No Mermaid code provided');
       }
@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const refreshPreviewCommand = vscode.commands.registerCommand(
     'mermaidInlineViewer.refreshPreview',
     () => {
-      WebviewService.refresh();
+      WebviewService.getInstance().refresh();
     }
   );
   context.subscriptions.push(refreshPreviewCommand);

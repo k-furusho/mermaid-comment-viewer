@@ -112,7 +112,8 @@
     "format": "biome format --write src",
     "test": "vscode-test",
     "package": "vsce package --no-dependencies",
-    "publish": "vsce publish --no-dependencies"
+    "publish": "vsce publish --no-dependencies",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -123,6 +124,7 @@
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.24.0",
+    "husky": "^9.1.7",
     "typescript": "^5.7.2"
   },
   "dependencies": {
