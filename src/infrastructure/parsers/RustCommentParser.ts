@@ -23,28 +23,32 @@ export class RustCommentParser implements ICommentParser {
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
 
-    const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
-    for (const match of blockMatches) {
-      const code = match[1];
-      if (code) {
-        this.processMatch(text, match, code, results);
+    try {
+      const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
+      for (const match of blockMatches) {
+        const code = match[1];
+        if (code) {
+          this.processMatch(text, match, code, results);
+        }
       }
-    }
 
-    const docMatches = Array.from(text.matchAll(this.docCommentPattern));
-    for (const match of docMatches) {
-      let code = match[1];
-      if (code) {
-        // remove //! prefix from each line
-        code = code
-          .split('\n')
-          .map(line => line.replace(/^\/\/!\s?/, ''))
-          .join('\n');
-        this.processMatch(text, match, code, results);
+      const docMatches = Array.from(text.matchAll(this.docCommentPattern));
+      for (const match of docMatches) {
+        let code = match[1];
+        if (code) {
+          // remove //! prefix from each line
+          code = code
+            .split('\n')
+            .map(line => line.replace(/^\/\/!\s?/, ''))
+            .join('\n');
+          this.processMatch(text, match, code, results);
+        }
       }
-    }
 
-    return R.ok(results);
+      return R.ok(results);
+    } catch (error) {
+      return R.err(new ParseError(error instanceof Error ? error.message : 'Unknown parse error'));
+    }
   }
 
   private processMatch(
