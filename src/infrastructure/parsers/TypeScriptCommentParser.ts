@@ -1,4 +1,4 @@
-import type { MermaidCode, LineNumber } from '../../domain/types/BrandedTypes';
+import type { MermaidCode } from '../../domain/types/BrandedTypes';
 import { MermaidCode as MC } from '../../domain/types/BrandedTypes';
 import { LineNumber as LN } from '../../domain/types/BrandedTypes';
 import type { CodeRange } from '../../domain/entities/CodeRange';
@@ -20,12 +20,12 @@ export class TypeScriptCommentParser implements ICommentParser {
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {
+      const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
       // block comment pattern
       const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
 
       for (const match of blockMatches) {
         const rawCode = match[1];
-        console.log('[TypeScriptCommentParser] Raw match code:', rawCode);
 
         if (rawCode) {
           // trim the code and remove extra whitespace
@@ -33,16 +33,13 @@ export class TypeScriptCommentParser implements ICommentParser {
 
           // skip invalid Mermaid code (contains JSON syntax)
           if (code.includes('"mermaidInlineViewer') || code.includes('": {')) {
-            console.warn('[TypeScriptCommentParser] Skipping invalid Mermaid code (contains JSON syntax)');
             continue;
           }
 
           const codeResult = MC.create(code);
           if (R.isOk(codeResult)) {
             const startLine = this.getLineNumber(text, match.index ?? 0);
-            const endLine = this.getLineNumber(text, (match.index ?? 0) + match[0].length - 1);
-
-            console.log('[TypeScriptCommentParser] Line range:', startLine, '-', endLine);
+            const endLine = this.getLineNumber(text, (match.index ?? 0) + match[0].length);
 
             const startLN = LN.create(startLine);
             const endLN = LN.create(endLine);
@@ -57,7 +54,6 @@ export class TypeScriptCommentParser implements ICommentParser {
         }
       }
 
-      console.log('[TypeScriptCommentParser] Total results:', results.length);
       return R.ok(results);
     } catch (error) {
       return R.err(new ParseError(error instanceof Error ? error.message : 'Unknown parse error'));

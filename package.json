@@ -77,6 +77,28 @@
     "configuration": {
       "title": "Mermaid Comment Viewer",
       "properties": {
+        "mermaidInlineViewer.theme": {
+          "type": "string",
+          "enum": [
+            "default",
+            "base",
+            "dark",
+            "forest",
+            "neutral"
+          ],
+          "default": "base",
+          "description": "Mermaid diagram theme."
+        },
+        "mermaidInlineViewer.fontSize": {
+          "type": "number",
+          "default": 16,
+          "description": "Font size for Mermaid diagrams."
+        },
+        "mermaidInlineViewer.backgroundColor": {
+          "type": "string",
+          "default": "transparent",
+          "description": "Background color for the Mermaid diagram preview."
+        }
       }
     }
   },

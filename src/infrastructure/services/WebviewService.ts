@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 export class WebviewService {
   private static currentPanel: vscode.WebviewPanel | undefined;
   private static extensionUri: vscode.Uri | undefined;
+  private static lastMermaidCode: string | undefined;
 
   public static initialize(context: vscode.ExtensionContext): void {
     WebviewService.extensionUri = context.extensionUri;
@@ -108,6 +109,11 @@ export class WebviewService {
       .replace(/'/g, '&#039;');
 
     // detect the VSCode theme and determine the Mermaid theme
+    const config = vscode.workspace.getConfiguration('mermaidInlineViewer');
+    const theme = config.get<string>('theme', 'base');
+    const fontSize = config.get<number>('fontSize', 16);
+    const backgroundColor = config.get<string>('backgroundColor', 'transparent');
+
     // use the dark theme and apply custom colors
     return `<!DOCTYPE html>
 <html lang="en">
@@ -115,54 +121,6 @@ export class WebviewService {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mermaid Preview</title>
-  <script type="module">
-    import mermaid from '${mermaidUri}';
-
-    // initialize Mermaid - use a light theme with custom colors
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'base',
-      themeVariables: {
-        // background and basic colors
-        primaryColor: '#e8f4fd',
-        primaryTextColor: '#1a1a1a',
-        primaryBorderColor: '#2196f3',
-
-        // line and text colors
-        lineColor: '#2196f3',
-        textColor: '#1a1a1a',
-
-        // secondary colors
-        secondaryColor: '#fff3e0',
-        secondaryTextColor: '#1a1a1a',
-        secondaryBorderColor: '#ff9800',
-
-        // other colors
-        tertiaryColor: '#f3e5f5',
-        tertiaryTextColor: '#1a1a1a',
-        tertiaryBorderColor: '#9c27b0',
-
-        // node background colors
-        mainBkg: '#e3f2fd',
-        secondBkg: '#fff3e0',
-        tertiaryBkg: '#f3e5f5',
-
-        // edge and arrow colors
-        edgeLabelBackground: '#ffffff',
-        clusterBkg: '#f5f5f5',
-        clusterBorder: '#757575',
-
-        // font
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        fontSize: '16px',
-
-        // contrast
-        darkMode: false,
-        background: '#ffffff'
-      },
-      securityLevel: 'loose'
-    });
-  </script>
   <style>
     * {
       box-sizing: border-box;
@@ -220,7 +178,7 @@ export class WebviewService {
     }
     .mermaid {
       display: inline-block;
-      background-color: #ffffff;
+      background-color: ${backgroundColor === 'transparent' ? 'var(--vscode-editor-background)' : backgroundColor};
       padding: 32px;
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -281,43 +239,126 @@ ${escapedCode}
     <div id="error-container"></div>
   </div>
 
-    <script>
-      // variables for zoom and pan
-      let scale = 1;
-      let isPanning = false;
-      let startX = 0;
-      let startY = 0;
-      let translateX = 0;
-      let translateY = 0;
+  <script type="module">
+    import mermaid from '${mermaidUri}';
 
-      const mermaidWrapper = document.querySelector('.mermaid-wrapper');
-      const mermaidDiv = document.querySelector('.mermaid');
-      const container = document.querySelector('.container');
+    // initialize Mermaid - use a light theme with custom colors
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: '${theme}',
+      themeVariables: {
+        fontSize: '${fontSize}px',
+        // background and basic colors
+        primaryColor: '#e8f4fd',
+        primaryTextColor: '#1a1a1a',
+        primaryBorderColor: '#2196f3',
 
-      // zoom function
-      function zoom(delta) {
-        const newScale = scale + delta;
-        if (newScale > 0.1 && newScale < 5) {
-          scale = newScale;
-          updateTransform();
-        }
+        // line and text colors
+        lineColor: '#2196f3',
+        textColor: '#1a1a1a',
+
+        // secondary colors
+        secondaryColor: '#fff3e0',
+        secondaryTextColor: '#1a1a1a',
+        secondaryBorderColor: '#ff9800',
+
+        // other colors
+        tertiaryColor: '#f3e5f5',
+        tertiaryTextColor: '#1a1a1a',
+        tertiaryBorderColor: '#9c27b0',
+
+        // node background colors
+        mainBkg: '#e3f2fd',
+        secondBkg: '#fff3e0',
+        tertiaryBkg: '#f3e5f5',
+
+        // edge and arrow colors
+        edgeLabelBackground: '#ffffff',
+        clusterBkg: '#f5f5f5',
+        clusterBorder: '#757575',
+
+        // font
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        fontSize: '16px',
+
+        // contrast
+        darkMode: false,
+        background: '#ffffff'
+      },
+      securityLevel: 'loose'
+    });
+
+    // variables for zoom and pan
+    let scale = 1;
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    let translateX = 0;
+    let translateY = 0;
+
+    const mermaidWrapper = document.querySelector('.mermaid-wrapper');
+    const mermaidDiv = document.querySelector('.mermaid');
+    const container = document.querySelector('.container');
+    const errorContainer = document.getElementById('error-container');
+
+    // Helper to safely display errors
+    function displayError(title, message, code) {
+      if (!errorContainer) return;
+
+      errorContainer.innerHTML = '';
+
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error';
+
+      const titleElem = document.createElement('h3');
+      titleElem.textContent = title;
+
+      const msgElem = document.createElement('p');
+      msgElem.textContent = message;
+
+      const codeBlock = document.createElement('div');
+      codeBlock.className = 'code-block';
+
+      const pre = document.createElement('pre');
+      pre.textContent = code;
+
+      codeBlock.appendChild(pre);
+      errorDiv.appendChild(titleElem);
+      errorDiv.appendChild(msgElem);
+      errorDiv.appendChild(codeBlock);
+
+      errorContainer.appendChild(errorDiv);
+
+      if (mermaidWrapper) {
+        mermaidWrapper.style.display = 'none';
       }
+    }
 
-      // reset function
-      function reset() {
-        scale = 1;
-        translateX = 0;
-        translateY = 0;
+    // zoom function
+    function zoom(delta) {
+      const newScale = scale + delta;
+      if (newScale > 0.1 && newScale < 5) {
+        scale = newScale;
         updateTransform();
       }
+    }
 
-      // update the transform
-      function updateTransform() {
-        if (mermaidDiv) {
-          mermaidDiv.style.transform = \`translate(\${translateX}px, \${translateY}px) scale(\${scale})\`;
-        }
+    // reset function
+    function reset() {
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+    }
+
+    // update the transform
+    function updateTransform() {
+      if (mermaidDiv) {
+        mermaidDiv.style.transform = \`translate(\${translateX}px, \${translateY}px) scale(\${scale})\`;
       }
+    }
 
+    if (container) {
       // zoom with the mouse wheel
       container.addEventListener('wheel', (e) => {
         if (e.ctrlKey || e.metaKey) {
@@ -334,70 +375,53 @@ ${escapedCode}
         startY = e.clientY - translateY;
         container.style.cursor = 'grabbing';
       });
+    }
 
-      window.addEventListener('mousemove', (e) => {
-        if (!isPanning) return;
-        e.preventDefault();
-        translateX = e.clientX - startX;
-        translateY = e.clientY - startY;
-        updateTransform();
-      });
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      e.preventDefault();
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
+    });
 
-      window.addEventListener('mouseup', () => {
-        isPanning = false;
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+      if (container) {
         container.style.cursor = 'default';
-      });
+      }
+    });
 
-      // button event listeners
-      document.getElementById('btn-zoom-in').addEventListener('click', () => zoom(0.2));
-      document.getElementById('btn-zoom-out').addEventListener('click', () => zoom(-0.2));
-      document.getElementById('btn-reset').addEventListener('click', reset);
+    // button event listeners
+    const btnZoomIn = document.getElementById('btn-zoom-in');
+    if (btnZoomIn) btnZoomIn.addEventListener('click', () => zoom(0.2));
 
-      window.addEventListener('error', (event) => {
-        const errorContainer = document.getElementById('error-container');
-        const mermaidWrapper = document.querySelector('.mermaid-wrapper');
+    const btnZoomOut = document.getElementById('btn-zoom-out');
+    if (btnZoomOut) btnZoomOut.addEventListener('click', () => zoom(-0.2));
 
-        errorContainer.innerHTML = \`
-          <div class="error">
-            <h3>⚠️ Rendering Error</h3>
-            <p>\${event.error?.message || 'Unknown error occurred'}</p>
-            <div class="code-block">
-              <pre>\${document.querySelector('.mermaid').textContent}</pre>
-            </div>
-          </div>
-        \`;
+    const btnReset = document.getElementById('btn-reset');
+    if (btnReset) btnReset.addEventListener('click', reset);
 
-        if (mermaidWrapper) {
-          mermaidWrapper.style.display = 'none';
-        }
-      });
+    window.addEventListener('error', (event) => {
+      const code = mermaidDiv ? mermaidDiv.textContent : '';
+      displayError('⚠️ Rendering Error', event.error?.message || 'Unknown error occurred', code);
+    });
 
-        try {
-          await mermaid.parse(\`\${document.querySelector('.mermaid').textContent}\`);
-          await mermaid.run();
-        } catch (error) {
-          const errorContainer = document.getElementById('error-container');
-          const mermaidWrapper = document.querySelector('.mermaid-wrapper');
-
-          errorContainer.innerHTML = \`
-            <div class="error">
-              <h3>⚠️ Syntax Error</h3>
-              <p>\${error.message || 'Unknown error occurred'}</p>
-              <div class="code-block">
-                <pre>\${document.querySelector('.mermaid').textContent}</pre>
-              </div>
-            </div>
-          \`;
-
-          if (mermaidWrapper) {
-            mermaidWrapper.style.display = 'none';
-          }
-        }
+    // Render Mermaid
+    (async () => {
+      try {
+        if (!mermaidDiv) return;
+        const code = mermaidDiv.textContent;
+        await mermaid.parse(code);
+        await mermaid.run();
         console.log('Mermaid diagram loaded successfully');
-      });
-    </script>
-  </body>
-  </html>`;
+      } catch (error) {
+        const code = mermaidDiv ? mermaidDiv.textContent : '';
+        displayError('⚠️ Syntax Error', error.message || 'Unknown error occurred', code);
+      }
+    })();
+  </script>
+</body>
+</html>`;
   }
 }
-
