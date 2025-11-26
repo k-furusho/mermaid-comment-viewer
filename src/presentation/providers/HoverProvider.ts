@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
 import type { Language } from '../../domain/types/BrandedTypes';
+import { LineNumber as LN } from '../../domain/types/BrandedTypes';
+import { Result as R } from '../../domain/types/Result';
 import { GoCommentParser } from '../../infrastructure/parsers/GoCommentParser';
 import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
 import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
@@ -65,8 +67,8 @@ export class MermaidHoverProvider implements vscode.HoverProvider {
         'against position:',
         position.line
       );
-      if (block.range.contains(position.line)) {
-        // TODO: Fix explicit any type casting
+      const lineNumberResult = LN.create(position.line);
+      if (R.isOk(lineNumberResult) && block.range.contains(lineNumberResult.value)) {
         console.log('[MermaidHoverProvider] Found matching block!');
 
         const markdown = new vscode.MarkdownString();
