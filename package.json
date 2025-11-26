@@ -22,8 +22,7 @@
   },
   "categories": [
     "Visualization",
-    "Programming Languages",
-    "Documentation"
+    "Programming Languages"
   ],
   "keywords": [
     "mermaid",
@@ -53,11 +52,6 @@
         "command": "mermaidInlineViewer.showPreview",
         "title": "Mermaid: Show Preview",
         "icon": "$(open-preview)"
-      },
-      {
-        "command": "mermaidInlineViewer.exportImage",
-        "title": "Mermaid: Export as Image",
-        "icon": "$(device-camera)"
       },
       {
         "command": "mermaidInlineViewer.refreshPreview",

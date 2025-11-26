@@ -22,7 +22,7 @@ export class PythonCommentParser implements ICommentParser {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
 
     try {
-      // Double quote docstring解析
+      // Parse double quote docstrings
       const doubleQuoteMatches = Array.from(text.matchAll(this.doubleQuotePattern));
       for (const match of doubleQuoteMatches) {
         const code = match[1];
@@ -31,7 +31,7 @@ export class PythonCommentParser implements ICommentParser {
         }
       }
 
-      // Single quote docstring解析
+      // Parse single quote docstrings
       const singleQuoteMatches = Array.from(text.matchAll(this.singleQuotePattern));
       for (const match of singleQuoteMatches) {
         const code = match[1];

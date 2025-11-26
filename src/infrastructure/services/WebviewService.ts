@@ -25,7 +25,6 @@ export class WebviewService {
 
   public refresh(): void {
     if (this.currentPanel && this.lastMermaidCode) {
-      console.log('[WebviewService] Refreshing preview');
       this.currentPanel.webview.html = this.getHtmlContent(
         this.currentPanel.webview,
         this.lastMermaidCode
@@ -34,10 +33,7 @@ export class WebviewService {
   }
 
   public showPreview(mermaidCode: string): void {
-    console.log('[WebviewService] Showing preview for code:', mermaidCode.substring(0, 100));
-
     if (!this.extensionUri) {
-      console.error('[WebviewService] Extension URI not set. Call initialize() first.');
       return;
     }
 
@@ -81,16 +77,12 @@ export class WebviewService {
 
     this.currentPanel.webview.html = this.getHtmlContent(this.currentPanel.webview, mermaidCode);
 
-    // if the panel is disposed, clear the reference
+    // If the panel is disposed, clear the reference
     this.currentPanel.onDidDispose(() => {
       this.currentPanel = undefined;
-      console.log('[WebviewService] Panel disposed');
     });
 
-    // if the panel is active, log the view state
-    this.currentPanel.onDidChangeViewState((e) => {
-      console.log('[WebviewService] Panel view state changed:', e.webviewPanel.visible);
-    });
+
   }
 
   private getHtmlContent(webview: vscode.Webview, mermaidCode: string): string {
@@ -99,7 +91,7 @@ export class WebviewService {
     }
 
     const mermaidUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'mermaid.esm.min.mjs')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'mermaid.min.js')
     );
 
     // escape the Mermaid code
@@ -117,6 +109,33 @@ export class WebviewService {
     const backgroundColor = config.get<string>('backgroundColor', 'transparent');
 
     // use the dark theme and apply custom colors
+    const themeConfig = {
+      theme: theme,
+      themeVariables: {
+        fontSize: `${fontSize}px`,
+        primaryColor: '#e8f4fd',
+        primaryTextColor: '#1a1a1a',
+        primaryBorderColor: '#2196f3',
+        lineColor: '#2196f3',
+        textColor: '#1a1a1a',
+        secondaryColor: '#fff3e0',
+        secondaryTextColor: '#1a1a1a',
+        secondaryBorderColor: '#ff9800',
+        tertiaryColor: '#f3e5f5',
+        tertiaryTextColor: '#1a1a1a',
+        tertiaryBorderColor: '#9c27b0',
+        mainBkg: '#e3f2fd',
+        secondBkg: '#fff3e0',
+        tertiaryBkg: '#f3e5f5',
+        edgeLabelBackground: '#ffffff',
+        clusterBkg: '#f5f5f5',
+        clusterBorder: '#757575',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        darkMode: false,
+        background: '#ffffff'
+      },
+      securityLevel: 'loose'
+    };
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -153,16 +172,23 @@ export class WebviewService {
       flex: 1;
     }
     .toolbar-button {
-      background: var(--vscode-button-background);
+      background: rgba(255, 255, 255, 0.1);
       color: var(--vscode-button-foreground);
-      border: none;
-      padding: 4px 12px;
-      border-radius: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 12px;
+      border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
     }
     .toolbar-button:hover {
       background: var(--vscode-button-hoverBackground);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .toolbar-button:active {
+      transform: translateY(0);
     }
     .container {
       flex: 1;
@@ -174,17 +200,19 @@ export class WebviewService {
     }
     .mermaid-wrapper {
       width: 100%;
+      height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
+      overflow: hidden;
     }
     .mermaid {
-      display: inline-block;
-      background-color: ${backgroundColor === 'transparent' ? 'var(--vscode-editor-background)' : backgroundColor};
-      padding: 32px;
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-      min-width: 400px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      background-color: ${backgroundColor === 'transparent' ? 'transparent' : backgroundColor};
     }
 
     /* adjust the Mermaid SVG style */
@@ -228,6 +256,9 @@ export class WebviewService {
 <body>
   <div class="toolbar">
     <span class="toolbar-title">📊 Mermaid Diagram Preview</span>
+    <button id="btn-copy-src" class="toolbar-button" title="Copy Source">📋 Source</button>
+    <button id="btn-copy-md" class="toolbar-button" title="Copy Markdown">📝 Markdown</button>
+    <div style="width: 1px; height: 16px; background: var(--vscode-widget-border); margin: 0 8px;"></div>
     <button id="btn-zoom-in" class="toolbar-button" title="Zoom In (+)">➕</button>
     <button id="btn-zoom-out" class="toolbar-button" title="Zoom Out (-)">➖</button>
     <button id="btn-reset" class="toolbar-button" title="Reset View">↺</button>
@@ -241,53 +272,15 @@ ${escapedCode}
     <div id="error-container"></div>
   </div>
 
-  <script type="module">
-    import mermaid from '${mermaidUri}';
+  <script src="${mermaidUri}"></script>
+  <script>
+    const mermaidCode = ${JSON.stringify(mermaidCode)};
+    const themeConfig = ${JSON.stringify(themeConfig)};
 
-    // initialize Mermaid - use a light theme with custom colors
+    // initialize Mermaid
     mermaid.initialize({
       startOnLoad: false,
-      theme: '${theme}',
-      themeVariables: {
-        fontSize: '${fontSize}px',
-        // background and basic colors
-        primaryColor: '#e8f4fd',
-        primaryTextColor: '#1a1a1a',
-        primaryBorderColor: '#2196f3',
-
-        // line and text colors
-        lineColor: '#2196f3',
-        textColor: '#1a1a1a',
-
-        // secondary colors
-        secondaryColor: '#fff3e0',
-        secondaryTextColor: '#1a1a1a',
-        secondaryBorderColor: '#ff9800',
-
-        // other colors
-        tertiaryColor: '#f3e5f5',
-        tertiaryTextColor: '#1a1a1a',
-        tertiaryBorderColor: '#9c27b0',
-
-        // node background colors
-        mainBkg: '#e3f2fd',
-        secondBkg: '#fff3e0',
-        tertiaryBkg: '#f3e5f5',
-
-        // edge and arrow colors
-        edgeLabelBackground: '#ffffff',
-        clusterBkg: '#f5f5f5',
-        clusterBorder: '#757575',
-
-        // font
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        fontSize: '16px',
-
-        // contrast
-        darkMode: false,
-        background: '#ffffff'
-      },
-      securityLevel: 'loose'
+      ...themeConfig
     });
 
     // variables for zoom and pan
@@ -404,6 +397,29 @@ ${escapedCode}
     const btnReset = document.getElementById('btn-reset');
     if (btnReset) btnReset.addEventListener('click', reset);
 
+    // Copy Source
+    document.getElementById('btn-copy-src')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(mermaidCode).then(() => {
+        const btn = document.getElementById('btn-copy-src');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = originalText, 2000);
+      });
+    });
+
+    // Copy Markdown
+    document.getElementById('btn-copy-md')?.addEventListener('click', () => {
+      const initDirective = "%%{init: " + JSON.stringify(themeConfig) + " }%%";
+      const fence = String.fromCharCode(96, 96, 96); // backticks
+      const md = fence + "mermaid" + String.fromCharCode(10) + initDirective + String.fromCharCode(10) + mermaidCode + String.fromCharCode(10) + fence;
+      navigator.clipboard.writeText(md).then(() => {
+        const btn = document.getElementById('btn-copy-md');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = originalText, 2000);
+      });
+    });
+
     window.addEventListener('error', (event) => {
       const code = mermaidDiv ? mermaidDiv.textContent : '';
       displayError('⚠️ Rendering Error', event.error?.message || 'Unknown error occurred', code);
@@ -416,7 +432,6 @@ ${escapedCode}
         const code = mermaidDiv.textContent;
         await mermaid.parse(code);
         await mermaid.run();
-        console.log('Mermaid diagram loaded successfully');
       } catch (error) {
         const code = mermaidDiv ? mermaidDiv.textContent : '';
         displayError('⚠️ Syntax Error', error.message || 'Unknown error occurred', code);

@@ -1,22 +1,13 @@
 import * as vscode from 'vscode';
 import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
 import type { Language } from '../../domain/types/BrandedTypes';
-import { GoCommentParser } from '../../infrastructure/parsers/GoCommentParser';
-import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
-import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
-import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
+import { ParserFactory } from '../../infrastructure/factories/ParserFactory';
 
 export class MermaidCodeLensProvider implements vscode.CodeLensProvider {
   private readonly parsers: Map<Language, ICommentParser>;
 
   constructor() {
-    console.log('[MermaidCodeLensProvider] Constructor called');
-    this.parsers = new Map();
-    this.parsers.set('typescript', new TypeScriptCommentParser());
-    this.parsers.set('javascript', new TypeScriptCommentParser());
-    this.parsers.set('go', new GoCommentParser());
-    this.parsers.set('rust', new RustCommentParser());
-    this.parsers.set('python', new PythonCommentParser());
+    this.parsers = ParserFactory.getParsers();
   }
 
   public provideCodeLenses(
@@ -54,7 +45,6 @@ export class MermaidCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(new vscode.CodeLens(range, command));
     }
 
-    console.log('[MermaidCodeLensProvider] Provided', codeLenses.length, 'code lenses');
     return codeLenses;
   }
 }
