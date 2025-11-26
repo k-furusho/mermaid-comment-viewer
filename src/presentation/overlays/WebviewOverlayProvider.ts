@@ -1,13 +1,11 @@
 import * as vscode from 'vscode';
+import type { CodeRange } from '../../domain/entities/CodeRange';
 import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
-import type { Language } from '../../domain/types/BrandedTypes';
+import type { Language, MermaidCode } from '../../domain/types/BrandedTypes';
 import { GoCommentParser } from '../../infrastructure/parsers/GoCommentParser';
 import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
 import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
 import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
-
-import type { CodeRange } from '../../domain/entities/CodeRange';
-import type { MermaidCode } from '../../domain/types/BrandedTypes';
 
 /**
  * Webview Overlayを使用したインラインMermaidプレビュー

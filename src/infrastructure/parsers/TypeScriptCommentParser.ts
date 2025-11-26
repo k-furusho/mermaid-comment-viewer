@@ -2,8 +2,7 @@ import type { CodeRange } from '../../domain/entities/CodeRange';
 import { CodeRange as CR } from '../../domain/entities/CodeRange';
 import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
 import type { MermaidCode } from '../../domain/types/BrandedTypes';
-import { MermaidCode as MC } from '../../domain/types/BrandedTypes';
-import { LineNumber as LN } from '../../domain/types/BrandedTypes';
+import { LineNumber as LN, MermaidCode as MC } from '../../domain/types/BrandedTypes';
 import type { Result } from '../../domain/types/Result';
 import { Result as R } from '../../domain/types/Result';
 
@@ -16,7 +15,6 @@ class ParseError extends Error {
 
 export class TypeScriptCommentParser implements ICommentParser {
   private readonly blockCommentPattern = /\/\*\s*mermaid\s*([\s\S]*?)\*\//gi;
-  private readonly docCommentPattern = /\/\*\*\s*mermaid\s*((?:\s*\*.*\n)+)\s*\*\//gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {
