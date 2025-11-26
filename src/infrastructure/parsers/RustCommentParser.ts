@@ -1,11 +1,10 @@
-import type { MermaidCode } from '../../domain/types/BrandedTypes';
-import { MermaidCode as MC } from '../../domain/types/BrandedTypes';
-import { LineNumber as LN } from '../../domain/types/BrandedTypes';
 import type { CodeRange } from '../../domain/entities/CodeRange';
 import { CodeRange as CR } from '../../domain/entities/CodeRange';
+import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
+import type { MermaidCode } from '../../domain/types/BrandedTypes';
+import { LineNumber as LN, MermaidCode as MC } from '../../domain/types/BrandedTypes';
 import type { Result } from '../../domain/types/Result';
 import { Result as R } from '../../domain/types/Result';
-import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
 
 class ParseError extends Error {
   constructor(message: string) {
@@ -39,7 +38,7 @@ export class RustCommentParser implements ICommentParser {
           // remove //! prefix from each line
           code = code
             .split('\n')
-            .map(line => line.replace(/^\/\/!\s?/, ''))
+            .map((line) => line.replace(/^\/\/!\s?/, ''))
             .join('\n');
           this.processMatch(text, match, code, results);
         }
@@ -80,4 +79,3 @@ export class RustCommentParser implements ICommentParser {
     return text.substring(0, index).split('\n').length - 1;
   }
 }
-

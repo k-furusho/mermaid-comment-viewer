@@ -1,8 +1,8 @@
-import type { MermaidCode, Language } from '../types/BrandedTypes';
-import type { CodeRange } from './CodeRange';
+import { randomUUID } from 'node:crypto';
+import type { Language, MermaidCode } from '../types/BrandedTypes';
 import type { Result } from '../types/Result';
 import { Result as R } from '../types/Result';
-import { randomUUID } from 'crypto';
+import type { CodeRange } from './CodeRange';
 
 class ValidationError extends Error {
   constructor(message: string) {

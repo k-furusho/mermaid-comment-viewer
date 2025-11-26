@@ -1,11 +1,10 @@
-import type { MermaidCode } from '../../domain/types/BrandedTypes';
-import { MermaidCode as MC } from '../../domain/types/BrandedTypes';
-import { LineNumber as LN } from '../../domain/types/BrandedTypes';
 import type { CodeRange } from '../../domain/entities/CodeRange';
 import { CodeRange as CR } from '../../domain/entities/CodeRange';
+import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
+import type { MermaidCode } from '../../domain/types/BrandedTypes';
+import { LineNumber as LN, MermaidCode as MC } from '../../domain/types/BrandedTypes';
 import type { Result } from '../../domain/types/Result';
 import { Result as R } from '../../domain/types/Result';
-import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
 
 class ParseError extends Error {
   constructor(message: string) {
@@ -76,4 +75,3 @@ export class PythonCommentParser implements ICommentParser {
     return text.substring(0, index).split('\n').length - 1;
   }
 }
-

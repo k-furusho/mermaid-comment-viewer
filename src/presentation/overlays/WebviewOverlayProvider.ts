@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
+import type { CodeRange } from '../../domain/entities/CodeRange';
 import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
-import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
-import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
+import type { Language, MermaidCode } from '../../domain/types/BrandedTypes';
 import { GoCommentParser } from '../../infrastructure/parsers/GoCommentParser';
+import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
 import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
-import type { Language } from '../../domain/types/BrandedTypes';
+import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
 
 /**
  * Webview Overlayを使用したインラインMermaidプレビュー
@@ -104,7 +105,7 @@ export class WebviewOverlayProvider {
     this.createOrUpdateOverlay(result.value);
   }
 
-  private createOrUpdateOverlay(blocks: Array<{ code: any; range: any }>): void {
+  private createOrUpdateOverlay(blocks: Array<{ code: MermaidCode; range: CodeRange }>): void {
     if (!this.currentEditor) {
       return;
     }
@@ -118,9 +119,7 @@ export class WebviewOverlayProvider {
         {
           enableScripts: true,
           retainContextWhenHidden: true,
-          localResourceRoots: [
-            vscode.Uri.joinPath(this.context.extensionUri, 'media')
-          ]
+          localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media')],
         }
       );
 
@@ -134,21 +133,26 @@ export class WebviewOverlayProvider {
     this.overlayPanel.webview.html = html;
   }
 
-  private generateHtml(blocks: Array<{ code: any; range: any }>, webview: vscode.Webview): string {
+  private generateHtml(
+    blocks: Array<{ code: MermaidCode; range: CodeRange }>,
+    webview: vscode.Webview
+  ): string {
     const mermaidUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.context.extensionUri, 'media', 'mermaid.min.js')
     );
 
-    const diagrams = blocks.map((block, index) => {
-      const code = (block.code as string).replace(/`/g, '\\`');
-      return `
+    const diagrams = blocks
+      .map((block, index) => {
+        const code = (block.code as string).replace(/`/g, '\\`');
+        return `
         <div class="mermaid-container" id="diagram-${index}">
           <div class="mermaid">
 ${code}
           </div>
         </div>
       `;
-    }).join('\n');
+      })
+      .join('\n');
 
     return `
       <!DOCTYPE html>
@@ -201,4 +205,3 @@ ${code}
     }
   }
 }
-

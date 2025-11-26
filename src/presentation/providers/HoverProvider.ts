@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
-import type { Language } from '../../domain/types/BrandedTypes';
 import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
-import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
+import type { Language } from '../../domain/types/BrandedTypes';
+import { LineNumber as LN } from '../../domain/types/BrandedTypes';
+import { Result as R } from '../../domain/types/Result';
 import { GoCommentParser } from '../../infrastructure/parsers/GoCommentParser';
-import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
 import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
+import { RustCommentParser } from '../../infrastructure/parsers/RustCommentParser';
+import { TypeScriptCommentParser } from '../../infrastructure/parsers/TypeScriptCommentParser';
 
 export class MermaidHoverProvider implements vscode.HoverProvider {
   private readonly parsers: Map<Language, ICommentParser>;
@@ -51,20 +53,30 @@ export class MermaidHoverProvider implements vscode.HoverProvider {
       console.log(`[MermaidHoverProvider] Block ${index}:`, {
         start: block.range.start,
         end: block.range.end,
-        code: block.code.substring(0, 50)
+        code: block.code.substring(0, 50),
       });
     });
 
     // search for the block that contains the position
     for (const block of result.value) {
-      console.log('[MermaidHoverProvider] Checking block range:', block.range.start, '-', block.range.end, 'against position:', position.line);
-      if (block.range.contains(position.line as any)) {
+      console.log(
+        '[MermaidHoverProvider] Checking block range:',
+        block.range.start,
+        '-',
+        block.range.end,
+        'against position:',
+        position.line
+      );
+      const lineNumberResult = LN.create(position.line);
+      if (R.isOk(lineNumberResult) && block.range.contains(lineNumberResult.value)) {
         console.log('[MermaidHoverProvider] Found matching block!');
 
         const markdown = new vscode.MarkdownString();
         markdown.isTrusted = true;
         markdown.appendMarkdown('**📊 Mermaid Diagram**\n\n');
-        markdown.appendMarkdown('_Click "Preview Mermaid Diagram" above to see the rendered diagram_\n\n');
+        markdown.appendMarkdown(
+          '_Click "Preview Mermaid Diagram" above to see the rendered diagram_\n\n'
+        );
         markdown.appendCodeblock(block.code as string, 'mermaid');
 
         return new vscode.Hover(markdown);

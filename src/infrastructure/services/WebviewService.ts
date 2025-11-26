@@ -1,38 +1,48 @@
 import * as vscode from 'vscode';
 
 export class WebviewService {
-  private static currentPanel: vscode.WebviewPanel | undefined;
-  private static extensionUri: vscode.Uri | undefined;
-  private static lastMermaidCode: string | undefined;
+  private static instance: WebviewService;
+  private currentPanel: vscode.WebviewPanel | undefined;
+  private extensionUri: vscode.Uri | undefined;
+  private lastMermaidCode: string | undefined;
 
-  public static initialize(context: vscode.ExtensionContext): void {
-    WebviewService.extensionUri = context.extensionUri;
+  private constructor() {}
+
+  public static getInstance(): WebviewService {
+    if (!WebviewService.instance) {
+      WebviewService.instance = new WebviewService();
+    }
+    return WebviewService.instance;
   }
 
-  public static hasActivePanel(): boolean {
-    return WebviewService.currentPanel !== undefined && WebviewService.currentPanel.visible;
+  public initialize(context: vscode.ExtensionContext): void {
+    this.extensionUri = context.extensionUri;
   }
 
-  public static refresh(): void {
-    if (WebviewService.currentPanel && WebviewService.lastMermaidCode) {
+  public hasActivePanel(): boolean {
+    return this.currentPanel?.visible ?? false;
+  }
+
+  public refresh(): void {
+    if (this.currentPanel && this.lastMermaidCode) {
       console.log('[WebviewService] Refreshing preview');
-      WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(
-        WebviewService.currentPanel.webview,
-        WebviewService.lastMermaidCode
+      this.currentPanel.webview.html = this.getHtmlContent(
+        this.currentPanel.webview,
+        this.lastMermaidCode
       );
     }
   }
 
-  public static showPreview(mermaidCode: string): void {
+  public showPreview(mermaidCode: string): void {
     console.log('[WebviewService] Showing preview for code:', mermaidCode.substring(0, 100));
 
-    if (!WebviewService.extensionUri) {
+    if (!this.extensionUri) {
       console.error('[WebviewService] Extension URI not set. Call initialize() first.');
       return;
     }
 
     // save the latest code
-    WebviewService.lastMermaidCode = mermaidCode;
+    this.lastMermaidCode = mermaidCode;
 
     const activeEditor = vscode.window.activeTextEditor;
 
@@ -44,60 +54,52 @@ export class WebviewService {
     }
 
     // if the panel already exists, reuse it
-    if (WebviewService.currentPanel) {
+    if (this.currentPanel) {
       // display the existing panel in the appropriate position
-      WebviewService.currentPanel.reveal(targetColumn, false); // preserveFocus = false
-      WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(
-        WebviewService.currentPanel.webview,
-        mermaidCode
-      );
+      this.currentPanel.reveal(targetColumn, false); // preserveFocus = false
+      this.currentPanel.webview.html = this.getHtmlContent(this.currentPanel.webview, mermaidCode);
 
       // update the title to show the latest preview
-      WebviewService.currentPanel.title = 'Mermaid Preview';
+      this.currentPanel.title = 'Mermaid Preview';
       return;
     }
 
     // create a new panel
-    WebviewService.currentPanel = vscode.window.createWebviewPanel(
+    this.currentPanel = vscode.window.createWebviewPanel(
       'mermaidPreview',
       'Mermaid Preview',
       {
         viewColumn: targetColumn,
-        preserveFocus: true // keep the focus on the editor
+        preserveFocus: true, // keep the focus on the editor
       },
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [
-          vscode.Uri.joinPath(WebviewService.extensionUri, 'media')
-        ]
+        localResourceRoots: [vscode.Uri.joinPath(this.extensionUri, 'media')],
       }
     );
 
-    WebviewService.currentPanel.webview.html = WebviewService.getHtmlContent(
-      WebviewService.currentPanel.webview,
-      mermaidCode
-    );
+    this.currentPanel.webview.html = this.getHtmlContent(this.currentPanel.webview, mermaidCode);
 
     // if the panel is disposed, clear the reference
-    WebviewService.currentPanel.onDidDispose(() => {
-      WebviewService.currentPanel = undefined;
+    this.currentPanel.onDidDispose(() => {
+      this.currentPanel = undefined;
       console.log('[WebviewService] Panel disposed');
     });
 
     // if the panel is active, log the view state
-    WebviewService.currentPanel.onDidChangeViewState((e) => {
+    this.currentPanel.onDidChangeViewState((e) => {
       console.log('[WebviewService] Panel view state changed:', e.webviewPanel.visible);
     });
   }
 
-  private static getHtmlContent(webview: vscode.Webview, mermaidCode: string): string {
-    if (!WebviewService.extensionUri) {
+  private getHtmlContent(webview: vscode.Webview, mermaidCode: string): string {
+    if (!this.extensionUri) {
       return '';
     }
 
     const mermaidUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(WebviewService.extensionUri, 'media', 'mermaid.esm.min.mjs')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'mermaid.esm.min.mjs')
     );
 
     // escape the Mermaid code
