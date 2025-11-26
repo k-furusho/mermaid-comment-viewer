@@ -13,7 +13,7 @@ importers:
         version: 11.12.1
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.3.6
+        specifier: ^2.3.7
         version: 2.3.7
       '@types/mocha':
         specifier: ^10.0.10
