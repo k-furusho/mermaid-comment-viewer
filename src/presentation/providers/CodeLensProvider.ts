@@ -39,7 +39,7 @@ export class MermaidCodeLensProvider implements vscode.CodeLensProvider {
       const command: vscode.Command = {
         title: '$(open-preview) Preview Mermaid Diagram',
         command: 'mermaidInlineViewer.showPreview',
-        arguments: [block.code],
+        arguments: [block.code, document],
       };
 
       codeLenses.push(new vscode.CodeLens(range, command));

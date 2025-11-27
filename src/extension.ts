@@ -31,9 +31,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const showPreviewCommand = vscode.commands.registerCommand(
     'mermaidInlineViewer.showPreview',
-    (mermaidCode?: string) => {
+    (mermaidCode?: string, document?: vscode.TextDocument) => {
       if (mermaidCode) {
-        WebviewService.getInstance().showPreview(mermaidCode);
+        // Use provided document or fall back to active editor
+        const doc = document || vscode.window.activeTextEditor?.document;
+        WebviewService.getInstance().showPreview(mermaidCode, doc);
       } else {
         vscode.window.showWarningMessage('No Mermaid code provided');
       }
@@ -49,6 +51,58 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   );
   context.subscriptions.push(refreshPreviewCommand);
+
+  // Real-time update: Monitor document changes and cursor position
+  const webviewService = WebviewService.getInstance();
+  let updateTimeout: NodeJS.Timeout | undefined;
+
+  // Debounce function to avoid too frequent updates
+  const debouncedUpdate = (document: vscode.TextDocument, position: vscode.Position) => {
+    if (updateTimeout) {
+      clearTimeout(updateTimeout);
+    }
+    updateTimeout = setTimeout(() => {
+      webviewService.updateFromCursorPosition(document, position);
+    }, 300); // 300ms debounce
+  };
+
+  // Monitor document changes
+  const changeDocumentDisposable = vscode.workspace.onDidChangeTextDocument((event) => {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (
+      activeEditor &&
+      activeEditor.document.uri.toString() === event.document.uri.toString() &&
+      webviewService.hasActivePanel()
+    ) {
+      const position = activeEditor.selection.active;
+      debouncedUpdate(event.document, position);
+    }
+  });
+
+  // Monitor cursor position changes
+  const changeSelectionDisposable = vscode.window.onDidChangeTextEditorSelection((event) => {
+    if (webviewService.hasActivePanel()) {
+      const document = event.textEditor.document;
+      const position = event.selections[0]?.active;
+      if (position) {
+        debouncedUpdate(document, position);
+      }
+    }
+  });
+
+  // Monitor active editor changes
+  const changeActiveEditorDisposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
+    if (editor && webviewService.hasActivePanel()) {
+      const position = editor.selection.active;
+      debouncedUpdate(editor.document, position);
+    }
+  });
+
+  context.subscriptions.push(
+    changeDocumentDisposable,
+    changeSelectionDisposable,
+    changeActiveEditorDisposable
+  );
 }
 
 export function deactivate() {}

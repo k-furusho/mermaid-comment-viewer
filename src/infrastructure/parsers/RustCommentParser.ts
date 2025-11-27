@@ -14,10 +14,11 @@ class ParseError extends Error {
 }
 
 export class RustCommentParser implements ICommentParser {
-  // Block comment pattern for Rust
-  private readonly blockCommentPattern = /\/\*\s*mermaid\s*\n([\s\S]*?)\*\//g;
+  // Block comment pattern for Rust - Support both "mermaid" and "@mermaid"
+  // Matches: /* mermaid ... */, /* @mermaid ... */, /*\n * @mermaid ... */
+  private readonly blockCommentPattern = /\/\*(?:\s*\n\s*(?:\*\s*)*)?@?mermaid\s*\n?([\s\S]*?)\*\//g;
   // Doc comment pattern for Rust (//! style)
-  private readonly docCommentPattern = /\/\/!\s*mermaid\s*\n((?:\/\/!.*\n)+)/g;
+  private readonly docCommentPattern = /\/\/!\s*@?mermaid\s*\n((?:\/\/!.*\n)+)/g;
   // remove //! prefix from each line
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
@@ -25,8 +26,13 @@ export class RustCommentParser implements ICommentParser {
     try {
       const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
       for (const match of blockMatches) {
-        const code = match[1];
+        let code = match[1];
         if (code) {
+          // Remove leading asterisks and whitespace from each line
+          code = code
+            .split('\n')
+            .map((line) => line.replace(/^\s*\*\s?/, '').trimEnd())
+            .join('\n');
           this.processMatch(text, match, code, results);
         }
       }

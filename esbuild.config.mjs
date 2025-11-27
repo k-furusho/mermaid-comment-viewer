@@ -18,7 +18,6 @@ async function main() {
     ],
     logLevel: 'silent',
     plugins: [
-      /* プラグイン追加可能 */
       {
         name: 'log-build',
         setup(build) {

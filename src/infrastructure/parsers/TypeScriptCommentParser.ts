@@ -14,7 +14,13 @@ class ParseError extends Error {
 }
 
 export class TypeScriptCommentParser implements ICommentParser {
-  private readonly blockCommentPattern = /\/\*\s*mermaid\s*([\s\S]*?)\*\//gi;
+  // Support both "mermaid" and "@mermaid" patterns
+  // Matches: /* mermaid ... */, /* @mermaid ... */, /** mermaid ... */, /** * @mermaid ... */
+  // Also matches: /** * * @mermaid ... */ (multiple asterisks before @mermaid)
+  // Also matches: /**\n * * @mermaid ... */ (with newline after /**)
+  // The pattern allows any content before @mermaid within the comment block
+  // Ensures "mermaid" is at the start (after /* or /**), at the start of a line (after optional asterisks), or after @
+  private readonly blockCommentPattern = /\/\*\*?(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)mermaid))\s*\n?([\s\S]*?)\*\//gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {
@@ -23,9 +29,15 @@ export class TypeScriptCommentParser implements ICommentParser {
       const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
 
       for (const match of blockMatches) {
-        const rawCode = match[1];
+        let rawCode = match[1];
 
         if (rawCode) {
+          // Remove leading asterisks and whitespace from each line
+          rawCode = rawCode
+            .split('\n')
+            .map((line) => line.replace(/^\s*\*\s?/, '').trimEnd())
+            .join('\n');
+
           // trim the code and remove extra whitespace
           const code = rawCode.trim();
 

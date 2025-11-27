@@ -1,10 +1,17 @@
 import * as vscode from 'vscode';
+import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
+import type { Language } from '../../domain/types/BrandedTypes';
+import { LineNumber as LN } from '../../domain/types/BrandedTypes';
+import { Result as R } from '../../domain/types/Result';
+import { ParserFactory } from '../factories/ParserFactory';
 
 export class WebviewService {
   private static instance: WebviewService;
   private currentPanel: vscode.WebviewPanel | undefined;
   private extensionUri: vscode.Uri | undefined;
   private lastMermaidCode: string | undefined;
+  private currentDocument: vscode.TextDocument | undefined;
+  private autoUpdateEnabled: boolean = false;
 
   private constructor() {}
 
@@ -32,13 +39,15 @@ export class WebviewService {
     }
   }
 
-  public showPreview(mermaidCode: string): void {
+  public showPreview(mermaidCode: string, document?: vscode.TextDocument): void {
     if (!this.extensionUri) {
       return;
     }
 
-    // save the latest code
+    // save the latest code and document
     this.lastMermaidCode = mermaidCode;
+    this.currentDocument = document;
+    this.autoUpdateEnabled = !!document;
 
     const activeEditor = vscode.window.activeTextEditor;
 
@@ -80,7 +89,64 @@ export class WebviewService {
     // If the panel is disposed, clear the reference
     this.currentPanel.onDidDispose(() => {
       this.currentPanel = undefined;
+      this.currentDocument = undefined;
+      this.autoUpdateEnabled = false;
     });
+  }
+
+  public updateFromCursorPosition(document: vscode.TextDocument, position: vscode.Position): void {
+    if (!this.autoUpdateEnabled || !this.currentPanel || !this.currentDocument) {
+      return;
+    }
+
+    // Only update if the document matches
+    if (document.uri.toString() !== this.currentDocument.uri.toString()) {
+      return;
+    }
+
+    // Find Mermaid block at cursor position
+    const mermaidCode = this.findMermaidAtPosition(document, position);
+    if (mermaidCode) {
+      this.lastMermaidCode = mermaidCode;
+      this.currentPanel.webview.html = this.getHtmlContent(this.currentPanel.webview, mermaidCode);
+    }
+  }
+
+  private findMermaidAtPosition(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ): string | undefined {
+    const language = document.languageId as Language;
+    const parser = ParserFactory.getParser(language);
+
+    if (!parser) {
+      return undefined;
+    }
+
+    const text = document.getText();
+    const result = parser.parse(text);
+
+    if (!result.ok) {
+      return undefined;
+    }
+
+    // Find the block that contains the cursor position
+    const lineNumberResult = LN.create(position.line);
+
+    if (R.isOk(lineNumberResult)) {
+      for (const block of result.value) {
+        if (block.range.contains(lineNumberResult.value)) {
+          return block.code as string;
+        }
+      }
+    }
+
+    // If no block contains the cursor, return the first block if any
+    if (result.value.length > 0) {
+      return result.value[0].code as string;
+    }
+
+    return undefined;
   }
 
   private getHtmlContent(webview: vscode.Webview, mermaidCode: string): string {
@@ -106,35 +172,75 @@ export class WebviewService {
     const fontSize = config.get<number>('fontSize', 16);
     const backgroundColor = config.get<string>('backgroundColor', 'transparent');
 
-    // use the dark theme and apply custom colors
-    const themeConfig = {
-      theme: theme,
-      themeVariables: {
-        fontSize: `${fontSize}px`,
-        primaryColor: '#e8f4fd',
-        primaryTextColor: '#1a1a1a',
-        primaryBorderColor: '#2196f3',
-        lineColor: '#2196f3',
-        textColor: '#1a1a1a',
-        secondaryColor: '#fff3e0',
-        secondaryTextColor: '#1a1a1a',
-        secondaryBorderColor: '#ff9800',
-        tertiaryColor: '#f3e5f5',
-        tertiaryTextColor: '#1a1a1a',
-        tertiaryBorderColor: '#9c27b0',
-        mainBkg: '#e3f2fd',
-        secondBkg: '#fff3e0',
-        tertiaryBkg: '#f3e5f5',
-        edgeLabelBackground: '#ffffff',
-        clusterBkg: '#f5f5f5',
-        clusterBorder: '#757575',
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        darkMode: false,
-        background: '#ffffff',
-      },
-      securityLevel: 'strict',
-    };
+    // detect if VS Code is in dark mode
+    const colorTheme = vscode.window.activeColorTheme;
+    const isDarkMode = colorTheme.kind === vscode.ColorThemeKind.Dark;
+
+    // determine background colors based on theme
+    const editorBackground = isDarkMode ? '#1e1e1e' : '#ffffff';
+    const panelBackground = isDarkMode ? '#252526' : '#f3f3f3';
+    const mermaidBackground = backgroundColor === 'transparent'
+      ? (isDarkMode ? '#1e1e1e' : '#ffffff')
+      : backgroundColor;
+
+    // configure Mermaid theme variables based on dark/light mode
+    const themeConfig = isDarkMode
+      ? {
+          theme: theme === 'base' ? 'dark' : theme,
+          themeVariables: {
+            fontSize: `${fontSize}px`,
+            primaryColor: '#4a9eff',
+            primaryTextColor: '#cccccc',
+            primaryBorderColor: '#4a9eff',
+            lineColor: '#4a9eff',
+            textColor: '#cccccc',
+            secondaryColor: '#ff9800',
+            secondaryTextColor: '#cccccc',
+            secondaryBorderColor: '#ff9800',
+            tertiaryColor: '#9c27b0',
+            tertiaryTextColor: '#cccccc',
+            tertiaryBorderColor: '#9c27b0',
+            mainBkg: '#2d2d30',
+            secondBkg: '#3e3e42',
+            tertiaryBkg: '#252526',
+            edgeLabelBackground: '#1e1e1e',
+            clusterBkg: '#2d2d30',
+            clusterBorder: '#3e3e42',
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            darkMode: true,
+            background: mermaidBackground,
+          },
+          securityLevel: 'strict',
+        }
+      : {
+          theme: theme,
+          themeVariables: {
+            fontSize: `${fontSize}px`,
+            primaryColor: '#e8f4fd',
+            primaryTextColor: '#1a1a1a',
+            primaryBorderColor: '#2196f3',
+            lineColor: '#2196f3',
+            textColor: '#1a1a1a',
+            secondaryColor: '#fff3e0',
+            secondaryTextColor: '#1a1a1a',
+            secondaryBorderColor: '#ff9800',
+            tertiaryColor: '#f3e5f5',
+            tertiaryTextColor: '#1a1a1a',
+            tertiaryBorderColor: '#9c27b0',
+            mainBkg: '#e3f2fd',
+            secondBkg: '#fff3e0',
+            tertiaryBkg: '#f3e5f5',
+            edgeLabelBackground: '#ffffff',
+            clusterBkg: '#f5f5f5',
+            clusterBorder: '#757575',
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            darkMode: false,
+            background: mermaidBackground,
+          },
+          securityLevel: 'strict',
+        };
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,7 +254,7 @@ export class WebviewService {
     body {
       margin: 0;
       padding: 0;
-      background-color: var(--vscode-editor-background);
+      background-color: ${editorBackground};
       color: var(--vscode-editor-foreground);
       font-family: var(--vscode-font-family);
       overflow: hidden;
@@ -158,7 +264,7 @@ export class WebviewService {
     }
     .toolbar {
       padding: 8px 16px;
-      background-color: var(--vscode-editorWidget-background);
+      background-color: ${panelBackground};
       border-bottom: 1px solid var(--vscode-editorWidget-border);
       display: flex;
       align-items: center;
@@ -211,7 +317,7 @@ export class WebviewService {
       align-items: center;
       width: 100%;
       height: 100%;
-      background-color: ${backgroundColor === 'transparent' ? 'transparent' : backgroundColor};
+      background-color: ${mermaidBackground};
     }
 
     /* adjust the Mermaid SVG style */
