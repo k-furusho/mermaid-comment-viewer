@@ -81,8 +81,6 @@ export class WebviewService {
     this.currentPanel.onDidDispose(() => {
       this.currentPanel = undefined;
     });
-
-
   }
 
   private getHtmlContent(webview: vscode.Webview, mermaidCode: string): string {
@@ -130,11 +128,12 @@ export class WebviewService {
         edgeLabelBackground: '#ffffff',
         clusterBkg: '#f5f5f5',
         clusterBorder: '#757575',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         darkMode: false,
-        background: '#ffffff'
+        background: '#ffffff',
       },
-      securityLevel: 'loose'
+      securityLevel: 'loose',
     };
     return `<!DOCTYPE html>
 <html lang="en">
