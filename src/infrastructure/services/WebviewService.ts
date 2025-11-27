@@ -133,7 +133,7 @@ export class WebviewService {
         darkMode: false,
         background: '#ffffff',
       },
-      securityLevel: 'loose',
+      securityLevel: 'strict',
     };
     return `<!DOCTYPE html>
 <html lang="en">
@@ -273,7 +273,8 @@ ${escapedCode}
 
   <script src="${mermaidUri}"></script>
   <script>
-    const mermaidCode = ${JSON.stringify(mermaidCode)};
+    const mermaidDiv = document.querySelector('.mermaid');
+    const mermaidCode = mermaidDiv ? mermaidDiv.textContent : '';
     const themeConfig = ${JSON.stringify(themeConfig)};
 
     // initialize Mermaid
@@ -291,7 +292,6 @@ ${escapedCode}
     let translateY = 0;
 
     const mermaidWrapper = document.querySelector('.mermaid-wrapper');
-    const mermaidDiv = document.querySelector('.mermaid');
     const container = document.querySelector('.container');
     const errorContainer = document.getElementById('error-container');
 
