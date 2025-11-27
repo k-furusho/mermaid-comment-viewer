@@ -179,9 +179,8 @@ export class WebviewService {
     // determine background colors based on theme
     const editorBackground = isDarkMode ? '#1e1e1e' : '#ffffff';
     const panelBackground = isDarkMode ? '#252526' : '#f3f3f3';
-    const mermaidBackground = backgroundColor === 'transparent'
-      ? (isDarkMode ? '#1e1e1e' : '#ffffff')
-      : backgroundColor;
+    const mermaidBackground =
+      backgroundColor === 'transparent' ? (isDarkMode ? '#1e1e1e' : '#ffffff') : backgroundColor;
 
     // configure Mermaid theme variables based on dark/light mode
     const themeConfig = isDarkMode

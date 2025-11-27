@@ -20,7 +20,8 @@ export class TypeScriptCommentParser implements ICommentParser {
   // Also matches: /**\n * * @mermaid ... */ (with newline after /**)
   // The pattern allows any content before @mermaid within the comment block
   // Ensures "mermaid" is at the start (after /* or /**), at the start of a line (after optional asterisks), or after @
-  private readonly blockCommentPattern = /\/\*\*?(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)mermaid))\s*\n?([\s\S]*?)\*\//gi;
+  private readonly blockCommentPattern =
+    /\/\*\*?(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)mermaid))\s*\n?([\s\S]*?)\*\//gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Result } from '../../domain/types/Result';
 import { GoCommentParser } from '../../infrastructure/parsers/GoCommentParser';
 import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';

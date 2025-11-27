@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Result } from '../../domain/types/Result';
 import { PythonCommentParser } from '../../infrastructure/parsers/PythonCommentParser';
 
@@ -178,8 +178,7 @@ line7`;
       expect(range.start).toBeTruthy();
       expect(range.end).toBeTruthy();
       expect(range.start as number).toBeGreaterThanOrEqual(2);
-      expect((range.end as number)).toBeGreaterThan(range.start as number);
+      expect(range.end as number).toBeGreaterThan(range.start as number);
     }
   });
 });
-

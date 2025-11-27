@@ -16,7 +16,8 @@ class ParseError extends Error {
 export class GoCommentParser implements ICommentParser {
   // Block comment pattern for Go - Support both "mermaid" and "@mermaid"
   // Matches: /* mermaid ... */, /* @mermaid ... */, /*\n * @mermaid ... */
-  private readonly blockCommentPattern = /\/\*(?:\s*\n\s*(?:\*\s*)*)?@?mermaid\s*\n?([\s\S]*?)\*\//g;
+  private readonly blockCommentPattern =
+    /\/\*(?:\s*\n\s*(?:\*\s*)*)?@?mermaid\s*\n?([\s\S]*?)\*\//g;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
