@@ -14,9 +14,10 @@ class ParseError extends Error {
 }
 
 export class PythonCommentParser implements ICommentParser {
-  // Triple quotes docstring patterns (both """ and ''')
-  private readonly doubleQuotePattern = /"""\s*mermaid\s*\n([\s\S]*?)"""/g;
-  private readonly singleQuotePattern = /'''\s*mermaid\s*\n([\s\S]*?)'''/g;
+  // Triple quotes docstring patterns (both """ and ''') - Support "mermaid", "@mermaid", and "Mermaid:"
+  // Pattern allows any content before mermaid keyword (for docstrings with descriptions)
+  private readonly doubleQuotePattern = /"""[\s\S]*?(?:@?mermaid|Mermaid:)\s*\n([\s\S]*?)"""/gi;
+  private readonly singleQuotePattern = /'''[\s\S]*?(?:@?mermaid|Mermaid:)\s*\n([\s\S]*?)'''/gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
@@ -52,6 +53,26 @@ export class PythonCommentParser implements ICommentParser {
     rawCode: string,
     results: Array<{ code: MermaidCode; range: CodeRange }>
   ): void {
+    // Remove common leading indentation from all lines
+    const lines = rawCode.split('\n');
+    if (lines.length > 0) {
+      // Find the minimum indentation (excluding empty lines)
+      const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+      if (nonEmptyLines.length > 0) {
+        const minIndent = Math.min(
+          ...nonEmptyLines.map((line) => {
+            const match = line.match(/^(\s*)/);
+            return match ? match[1].length : 0;
+          })
+        );
+
+        // Remove the common indentation from all lines
+        if (minIndent > 0) {
+          rawCode = lines.map((line) => line.slice(minIndent)).join('\n');
+        }
+      }
+    }
+
     // trim the code and remove extra whitespace
     const code = rawCode.trim();
     const codeResult = MC.create(code);

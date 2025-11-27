@@ -14,8 +14,10 @@ class ParseError extends Error {
 }
 
 export class GoCommentParser implements ICommentParser {
-  // Block comment pattern for Go
-  private readonly blockCommentPattern = /\/\*\s*mermaid\s*\n([\s\S]*?)\*\//g;
+  // Block comment pattern for Go - Support both "mermaid" and "@mermaid"
+  // Matches: /* mermaid ... */, /* @mermaid ... */, /*\n * @mermaid ... */
+  private readonly blockCommentPattern =
+    /\/\*(?:\s*\n\s*(?:\*\s*)*)?@?mermaid\s*\n?([\s\S]*?)\*\//g;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
@@ -24,8 +26,14 @@ export class GoCommentParser implements ICommentParser {
       // Parse block comments
       const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
       for (const match of blockMatches) {
-        const rawCode = match[1];
+        let rawCode = match[1];
         if (rawCode) {
+          // Remove leading asterisks and whitespace from each line
+          rawCode = rawCode
+            .split('\n')
+            .map((line) => line.replace(/^\s*\*\s?/, '').trimEnd())
+            .join('\n');
+
           // Trim code and remove extra whitespace
           const code = rawCode.trim();
           const codeResult = MC.create(code);
