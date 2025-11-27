@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       mermaid:
-        specifier: ^11.4.0
+        specifier: ^11.10.0
         version: 11.12.1
     devDependencies:
       '@biomejs/biome':

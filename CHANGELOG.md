@@ -2,21 +2,22 @@
 
 All notable changes to the "mermaid-comment-viewer" extension will be documented in this file.
 
-## [1.0.0] - 2025-11-19
+## [1.0.0] - 2025-11-26
 
-### Added
+### Features
+- CodeLens provider for inline preview triggering
+- Hover provider for quick diagram previews
+- Interactive Webview panel for full diagram viewing
+- Zoom and Pan capabilities (mouse wheel + drag)
+- Copy Source button (raw Mermaid code)
+- Copy Markdown button (with theme styling via init directive)
+- Full-width responsive layout with glassmorphism UI
+- Multi-language support: TypeScript, JavaScript, Python, Go, Rust
+- Automatic theme adaptation (Light/Dark)
 
-- **Interactive Preview Panel**: Added a dedicated webview panel to display Mermaid diagrams.
-- **Zoom & Pan Support**: Implemented zoom (mouse wheel/buttons) and pan (drag) features in the preview panel.
-- **CodeLens Integration**: Added a "Show Preview" CodeLens above Mermaid comment blocks.
-- **Hover Preview**: Added basic hover preview support.
-- **Multi-Language Support**: Added parsers for TypeScript, JavaScript, Python, Go, and Rust.
-
-### Changed
-
-- **Renamed**: Project renamed from `mermaid-inline-viewer` to `mermaid-comment-viewer`.
-- **Architecture**: Removed unstable inline decoration preview in favor of a robust panel-based preview.
-
-### Removed
-
-- Removed inline decoration preview feature.
+### Technical
+- Switched to Mermaid UMD build for reliability
+- Created ParserFactory to eliminate code duplication
+- Removed all debug console.log statements
+- Converted all comments to English
+- Optimized package size

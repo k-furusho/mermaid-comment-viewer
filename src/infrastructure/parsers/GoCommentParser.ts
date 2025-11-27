@@ -21,12 +21,12 @@ export class GoCommentParser implements ICommentParser {
     const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
 
     try {
-      // ブロックコメント解析
+      // Parse block comments
       const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
       for (const match of blockMatches) {
         const rawCode = match[1];
         if (rawCode) {
-          // コードをトリムして余分な空白を除去
+          // Trim code and remove extra whitespace
           const code = rawCode.trim();
           const codeResult = MC.create(code);
           if (R.isOk(codeResult)) {

@@ -1,78 +1,66 @@
 # Mermaid Comment Viewer
 
-A VS Code extension that helps you visualize Mermaid diagrams directly from your code comments.
+Visualize Mermaid diagrams directly from your code comments with CodeLens, Hover, and an interactive Preview Panel.
 
-![Mermaid Preview](media/demo.gif)
+![Mermaid Preview](media/icon.png)
 
-## ✨ Features
+## Features
 
-- **💬 Code Comment Support**: Write Mermaid diagrams in block comments or docstrings.
-- **🔍 Interactive Preview Panel**: View diagrams in a dedicated side panel with **Zoom** and **Pan** support.
-- **🖱️ Hover Preview**: Quickly glance at diagrams by hovering over the Mermaid code.
-- **⚡ CodeLens Integration**: One-click "Show Preview" button above every Mermaid block.
-- **🌍 Multi-Language**: Supports TypeScript, JavaScript, Python, Go, and Rust.
+- **CodeLens Integration**: Click "Preview Mermaid Diagram" above any Mermaid code block in comments.
+- **Hover Preview**: Hover over Mermaid code to see a quick preview with formatted display.
+- **Interactive Preview Panel**:
+    - **Full-Width View**: View diagrams in a spacious, responsive panel with modern glassmorphism UI.
+    - **Zoom & Pan**: Intuitively explore large diagrams with mouse wheel zoom and drag-to-pan.
+    - **Copy Source**: Copy raw Mermaid code to clipboard.
+    - **Copy Markdown**: Copy diagram with theme styling as markdown code block.
+- **Multi-Language Support**: Works with TypeScript, JavaScript, Python, Go, and Rust.
+- **Theme Support**: Automatically adapts to your VS Code theme (Light/Dark).
 
-## 🚀 Usage
+## Usage
 
-### 1. Write Mermaid Code in Comments
+1. Write Mermaid code inside a comment block (supports `/* */`, `"""`, `#`, etc.).
+2. Click the **Preview Mermaid Diagram** CodeLens that appears above the code.
+3. Or, hover over the Mermaid code to see a quick preview.
+4. Or, run the command **Mermaid: Show Preview** from the Command Palette.
 
-Add a `mermaid` keyword to your comment block:
+### Example (TypeScript)
 
-**TypeScript / JavaScript / Go / Rust:**
 ```typescript
-/* mermaid
-graph TD
-    A[Client] --> B[Load Balancer]
-    B --> C[Server01]
-    B --> D[Server02]
-*/
+/**
+ * mermaid
+ * graph TD
+ *     A[Start] --> B{Is it working?}
+ *     B -- Yes --> C[Great!]
+ *     B -- No --> D[Debug]
+ */
 ```
 
-**Python:**
+### Example (Python)
+
 ```python
-"""mermaid
+"""
+mermaid
 sequenceDiagram
-    participant Alice
-    participant Bob
-    Alice->>Bob: Hello Bob, how are you?
-    Bob-->>Alice: I am good thanks!
+    Alice->>Bob: Hello
+    Bob->>Alice: Hi there!
 """
 ```
 
-### 2. View the Diagram
+## Extension Settings
 
-You have three ways to view the diagram:
+This extension contributes the following settings:
 
-1.  **CodeLens**: Click the `Show Preview` text appearing above the comment block.
-2.  **Hover**: Hover your mouse cursor over the `mermaid` keyword.
-3.  **Command**: Run `Mermaid: Show Preview` from the Command Palette.
+* `mermaidInlineViewer.theme`: Set the Mermaid theme (default, base, dark, forest, neutral).
+* `mermaidInlineViewer.backgroundColor`: Set the background color of the preview panel (default: transparent).
+* `mermaidInlineViewer.fontSize`: Set the font size for the diagram (default: 16).
 
-### 3. Interact with the Preview
+## Release Notes
 
-The preview panel supports:
-- **Zoom In/Out**: Use the toolbar buttons `+` / `-` or `Ctrl` + `Mouse Wheel`.
-- **Pan**: Drag the diagram with your mouse to move it around.
-- **Reset**: Click the `↺` button to reset the view.
+### 1.0.0
 
-## 📦 Installation
-
-1. Open VS Code
-2. Press `Ctrl+P` / `Cmd+P`
-3. Type `ext install k-furusho.mermaid-comment-viewer`
-
-## 🛠️ Supported Languages
-
-| Language | Syntax |
-|----------|--------|
-| **TypeScript / JS** | `/* mermaid ... */` |
-| **Go** | `/* mermaid ... */` |
-| **Rust** | `/* mermaid ... */` or `//! mermaid` |
-| **Python** | `"""mermaid ... """` or `'''mermaid ... '''` |
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-MIT
+- Initial release of Mermaid Comment Viewer.
+- Support for CodeLens and Hover previews.
+- Interactive Preview Panel with Zoom/Pan.
+- Copy Source and Copy Markdown features with theme styling.
+- Support for TypeScript, JavaScript, Python, Go, and Rust.
+- Modern glassmorphism UI design.

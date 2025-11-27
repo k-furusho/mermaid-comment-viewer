@@ -12,15 +12,14 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const supportedLanguages = ['typescript', 'javascript', 'python', 'go', 'rust'];
 
-  // Hover Provider登録
+  // Register Hover Provider
   const hoverProvider = new MermaidHoverProvider();
   for (const language of supportedLanguages) {
     const disposable = vscode.languages.registerHoverProvider(language, hoverProvider);
     context.subscriptions.push(disposable);
-    console.log(`[Extension] Registered hover provider for: ${language}`);
   }
 
-  // CodeLens Provider登録
+  // Register CodeLens Provider
   const codeLensProvider = new MermaidCodeLensProvider();
   for (const language of supportedLanguages) {
     const disposable = vscode.languages.registerCodeLensProvider(
@@ -28,7 +27,6 @@ export function activate(context: vscode.ExtensionContext): void {
       codeLensProvider
     );
     context.subscriptions.push(disposable);
-    console.log(`[Extension] Registered CodeLens provider for: ${language}`);
   }
 
   const showPreviewCommand = vscode.commands.registerCommand(
