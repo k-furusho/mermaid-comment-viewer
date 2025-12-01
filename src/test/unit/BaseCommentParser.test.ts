@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { BaseCommentParser, ParseError } from '../../infrastructure/parsers/BaseCommentParser';
 import type { CodeRange } from '../../domain/entities/CodeRange';
 import type { MermaidCode } from '../../domain/types/BrandedTypes';
 import { Result } from '../../domain/types/Result';
+import { BaseCommentParser, ParseError } from '../../infrastructure/parsers/BaseCommentParser';
 
 // Concrete implementation for testing
 class TestParser extends BaseCommentParser {
@@ -63,45 +63,29 @@ describe('BaseCommentParser Test Suite', () => {
 
   describe('Indent Removal', () => {
     it('should remove common indentation', () => {
-      const lines = [
-        '    line 1',
-        '    line 2',
-        '      nested'
-      ];
+      const lines = ['    line 1', '    line 2', '      nested'];
       const result = parser.testRemoveCommonIndentation(lines);
-      expect(result).toEqual([
-        'line 1',
-        'line 2',
-        '  nested'
-      ]);
+      expect(result).toEqual(['line 1', 'line 2', '  nested']);
     });
 
     it('should handle mixed indentation levels', () => {
       const lines = [
         '  line 1',
         '    line 2',
-        ' line 3' // 1 space
+        ' line 3', // 1 space
       ];
       const result = parser.testRemoveCommonIndentation(lines);
       expect(result).toEqual([
         ' line 1', // 1 space removed
         '   line 2',
-        'line 3'
+        'line 3',
       ]);
     });
 
     it('should ignore empty lines when calculating indentation', () => {
-      const lines = [
-        '    line 1',
-        '',
-        '    line 2'
-      ];
+      const lines = ['    line 1', '', '    line 2'];
       const result = parser.testRemoveCommonIndentation(lines);
-      expect(result).toEqual([
-        'line 1',
-        '',
-        'line 2'
-      ]);
+      expect(result).toEqual(['line 1', '', 'line 2']);
     });
   });
 
@@ -127,25 +111,13 @@ describe('BaseCommentParser Test Suite', () => {
     });
 
     it('should extract code until doc header', () => {
-      const lines = [
-        'graph TD',
-        'A-->B',
-        '',
-        'Usage:',
-        'Run command'
-      ];
+      const lines = ['graph TD', 'A-->B', '', 'Usage:', 'Run command'];
       const result = parser.testExtractMermaidBlock(lines);
       expect(result).toBe('graph TD\nA-->B');
     });
 
     it('should extract code until consecutive empty lines', () => {
-      const lines = [
-        'graph TD',
-        'A-->B',
-        '',
-        '',
-        'Some other text'
-      ];
+      const lines = ['graph TD', 'A-->B', '', '', 'Some other text'];
       const result = parser.testExtractMermaidBlock(lines);
       expect(result).toBe('graph TD\nA-->B');
     });
@@ -160,4 +132,3 @@ describe('BaseCommentParser Test Suite', () => {
     });
   });
 });
-

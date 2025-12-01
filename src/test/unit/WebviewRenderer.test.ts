@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { WebviewRenderer } from '../../infrastructure/renderers/WebviewRenderer';
 import * as vscode from 'vscode';
+import { WebviewRenderer } from '../../infrastructure/renderers/WebviewRenderer';
 
 // Mock vscode
 vi.mock('vscode', () => {
@@ -96,4 +96,3 @@ describe('WebviewRenderer Test Suite', () => {
     expect(html).toContain('"theme":"dark"');
   });
 });
-
