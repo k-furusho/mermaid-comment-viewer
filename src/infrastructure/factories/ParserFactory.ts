@@ -19,8 +19,13 @@ export class ParserFactory {
   static getParsers(): Map<Language, ICommentParser> {
     if (!ParserFactory.parsers) {
       ParserFactory.parsers = new Map();
-      ParserFactory.parsers.set('typescript', new TypeScriptCommentParser());
-      ParserFactory.parsers.set('javascript', new TypeScriptCommentParser());
+
+      const tsParser = new TypeScriptCommentParser();
+      ParserFactory.parsers.set('typescript', tsParser);
+      ParserFactory.parsers.set('typescriptreact', tsParser);
+      ParserFactory.parsers.set('javascript', tsParser);
+      ParserFactory.parsers.set('javascriptreact', tsParser);
+
       ParserFactory.parsers.set('go', new GoCommentParser());
       ParserFactory.parsers.set('rust', new RustCommentParser());
       ParserFactory.parsers.set('python', new PythonCommentParser());
@@ -30,7 +35,7 @@ export class ParserFactory {
 
   /**
    * Get a parser for the specified language.
-   * @param language - The programming language identifier
+   * @param language - The programming language identifier (VS Code language ID)
    * @returns The parser instance, or undefined if not supported
    */
   static getParser(language: Language): ICommentParser | undefined {

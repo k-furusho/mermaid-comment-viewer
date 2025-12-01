@@ -15,6 +15,13 @@ export default defineConfig({
         '**/*.config.*',
       ],
     },
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        maxThreads: 1,
+        minThreads: 1,
+      },
+    },
   },
 });
 

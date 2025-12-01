@@ -35,14 +35,14 @@ describe('TypeScriptCommentParser Test Suite', () => {
 
   it('should parse @mermaid with multiple asterisks before annotation', () => {
     const code = `/**
- * 決済トランザクション管理クラス
- * * 外部決済プロバイダー（Stripe等）との整合性を保ちながら、
- * 注文のライフサイクルを管理します。
- * * ## ステート遷移図
+ * Payment Transaction Management
+ * * Integrates with external payment providers (Stripe, etc.)
+ * and manages order lifecycle.
+ * * ## State Transition Diagram
  * * @mermaid
  * stateDiagram-v2
- *     [*] --> Created: 注文作成
- *     Created --> Locking: 在庫引当開始
+ *     [*] --> Created: Order Created
+ *     Created --> Locking: Stock Allocation
  */`;
     const result = parser.parse(code);
     expect(Result.isOk(result)).toBe(true);
@@ -57,22 +57,21 @@ describe('TypeScriptCommentParser Test Suite', () => {
 
   it('should parse @mermaid with complex state diagram', () => {
     const code = `/**
- * 決済トランザクション管理クラス
- * * 外部決済プロバイダー（Stripe等）との整合性を保ちながら、
- * 注文のライフサイクルを管理します。
- * * ## ステート遷移図
+ * Payment Transaction Management
+ * * Integrates with external payment providers (Stripe, etc.)
+ * * ## State Transition Diagram
  * * @mermaid
  * stateDiagram-v2
- *     [*] --> Created: 注文作成
- *     Created --> Locking: 在庫引当開始
+ *     [*] --> Created: Order Created
+ *     Created --> Locking: Stock Allocation
  *     state fork_state <<fork>>
  *     Locking --> fork_state
- *     fork_state --> StockReserved: 引当成功
- *     fork_state --> Failed: 引当失敗
- *     StockReserved --> Authorized: クレジット与信確保
- *     Authorized --> Captured: 売上確定（発送時）
- *     Authorized --> Voided: ユーザーキャンセル/期限切れ
- *     Captured --> Refunded: 返金処理
+ *     fork_state --> StockReserved: Allocation Success
+ *     fork_state --> Failed: Allocation Failed
+ *     StockReserved --> Authorized: Credit Auth
+ *     Authorized --> Captured: Sales Confirmed
+ *     Authorized --> Voided: User Cancel/Expired
+ *     Captured --> Refunded: Refund
  *     Failed --> [*]
  *     Voided --> [*]
  *     Refunded --> [*]
@@ -212,6 +211,59 @@ line7`;
       expect(result.value.length).toBe(1);
       expect(result.value[0].code).toContain('A[');
       expect(result.value[0].code).toContain('B[');
+    }
+  });
+
+  it('should parse Mermaid: keyword format', () => {
+    const code = `/**
+ * Bulk User Creation Script
+ *
+ * Creates multiple user accounts from a CSV file.
+ *
+ * Mermaid:
+ * graph TD
+ *   Start[Start Script] --> CheckToken{JWT_TOKEN<br/>Check Env}
+ *   CheckToken -- No --> ErrorToken[Error: Token Not Set]
+ *   CheckToken -- Yes --> ReadCSV[Read CSV File]
+ */`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      expect(result.value.length).toBe(1);
+      const mermaidCode = result.value[0].code;
+      expect(mermaidCode).toContain('graph TD');
+      expect(mermaidCode).toContain('Start[Start Script]');
+      expect(mermaidCode).toContain('CheckToken{JWT_TOKEN');
+    }
+  });
+
+  it('should parse Mermaid: keyword format and exclude following documentation', () => {
+    const code = `/**
+ * Bulk User Creation Script
+ *
+ * Creates multiple user accounts from a CSV file.
+ *
+ * Mermaid:
+ * graph TD
+ *   Start[Start Script] --> CheckToken{JWT_TOKEN<br/>Check Env}
+ *   CheckToken -- No --> ErrorToken[Error: Token Not Set]
+ *   CheckToken -- Yes --> ReadCSV[Read CSV File]
+ *
+ * Security Considerations:
+ * - Passwords should be plain text in CSV, hashed by API with PBKDF2-SHA256
+ * - CSV file should be securely deleted or encrypted after execution
+ */`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      expect(result.value.length).toBe(1);
+      const mermaidCode = result.value[0].code;
+      expect(mermaidCode).toContain('graph TD');
+      expect(mermaidCode).toContain('Start[Start Script]');
+      expect(mermaidCode).toContain('CheckToken{JWT_TOKEN');
+      // Should not contain the security considerations text
+      expect(mermaidCode).not.toContain('Security Considerations');
+      expect(mermaidCode).not.toContain('Passwords should be plain text');
     }
   });
 });
