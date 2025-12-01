@@ -2,6 +2,13 @@
 
 All notable changes to the "mermaid-comment-viewer" extension will be documented in this file.
 
+## [1.0.2] - 2025-12-01
+
+### Improvements
+- Added comprehensive unit tests for `BaseCommentParser` and `WebviewRenderer` to ensure reliability
+- Improved error handling and edge case coverage in parsing logic
+- Updated test configuration for better stability in CI/CD environments
+
 ## [1.0.1] - 2025-12-01
 
 ### Features

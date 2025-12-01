@@ -35,14 +35,14 @@ describe('TypeScriptCommentParser Test Suite', () => {
 
   it('should parse @mermaid with multiple asterisks before annotation', () => {
     const code = `/**
- * 決済トランザクション管理クラス
- * * 外部決済プロバイダー（Stripe等）との整合性を保ちながら、
- * 注文のライフサイクルを管理します。
- * * ## ステート遷移図
+ * Payment Transaction Management
+ * * Integrates with external payment providers (Stripe, etc.)
+ * and manages order lifecycle.
+ * * ## State Transition Diagram
  * * @mermaid
  * stateDiagram-v2
- *     [*] --> Created: 注文作成
- *     Created --> Locking: 在庫引当開始
+ *     [*] --> Created: Order Created
+ *     Created --> Locking: Stock Allocation
  */`;
     const result = parser.parse(code);
     expect(Result.isOk(result)).toBe(true);
@@ -57,22 +57,21 @@ describe('TypeScriptCommentParser Test Suite', () => {
 
   it('should parse @mermaid with complex state diagram', () => {
     const code = `/**
- * 決済トランザクション管理クラス
- * * 外部決済プロバイダー（Stripe等）との整合性を保ちながら、
- * 注文のライフサイクルを管理します。
- * * ## ステート遷移図
+ * Payment Transaction Management
+ * * Integrates with external payment providers (Stripe, etc.)
+ * * ## State Transition Diagram
  * * @mermaid
  * stateDiagram-v2
- *     [*] --> Created: 注文作成
- *     Created --> Locking: 在庫引当開始
+ *     [*] --> Created: Order Created
+ *     Created --> Locking: Stock Allocation
  *     state fork_state <<fork>>
  *     Locking --> fork_state
- *     fork_state --> StockReserved: 引当成功
- *     fork_state --> Failed: 引当失敗
- *     StockReserved --> Authorized: クレジット与信確保
- *     Authorized --> Captured: 売上確定（発送時）
- *     Authorized --> Voided: ユーザーキャンセル/期限切れ
- *     Captured --> Refunded: 返金処理
+ *     fork_state --> StockReserved: Allocation Success
+ *     fork_state --> Failed: Allocation Failed
+ *     StockReserved --> Authorized: Credit Auth
+ *     Authorized --> Captured: Sales Confirmed
+ *     Authorized --> Voided: User Cancel/Expired
+ *     Captured --> Refunded: Refund
  *     Failed --> [*]
  *     Voided --> [*]
  *     Refunded --> [*]
@@ -217,15 +216,15 @@ line7`;
 
   it('should parse Mermaid: keyword format', () => {
     const code = `/**
- * ユーザー一括作成スクリプト
+ * Bulk User Creation Script
  *
- * CSVファイルから複数のユーザーアカウントを一括作成します。
+ * Creates multiple user accounts from a CSV file.
  *
  * Mermaid:
  * graph TD
- *   Start[スクリプト開始] --> CheckToken{JWT_TOKEN<br/>環境変数確認}
- *   CheckToken -- なし --> ErrorToken[エラー: トークン未設定]
- *   CheckToken -- あり --> ReadCSV[CSVファイル読み込み]
+ *   Start[Start Script] --> CheckToken{JWT_TOKEN<br/>Check Env}
+ *   CheckToken -- No --> ErrorToken[Error: Token Not Set]
+ *   CheckToken -- Yes --> ReadCSV[Read CSV File]
  */`;
     const result = parser.parse(code);
     expect(Result.isOk(result)).toBe(true);
@@ -233,26 +232,26 @@ line7`;
       expect(result.value.length).toBe(1);
       const mermaidCode = result.value[0].code;
       expect(mermaidCode).toContain('graph TD');
-      expect(mermaidCode).toContain('Start[スクリプト開始]');
+      expect(mermaidCode).toContain('Start[Start Script]');
       expect(mermaidCode).toContain('CheckToken{JWT_TOKEN');
     }
   });
 
   it('should parse Mermaid: keyword format and exclude following documentation', () => {
     const code = `/**
- * ユーザー一括作成スクリプト
+ * Bulk User Creation Script
  *
- * CSVファイルから複数のユーザーアカウントを一括作成します。
+ * Creates multiple user accounts from a CSV file.
  *
  * Mermaid:
  * graph TD
- *   Start[スクリプト開始] --> CheckToken{JWT_TOKEN<br/>環境変数確認}
- *   CheckToken -- なし --> ErrorToken[エラー: トークン未設定]
- *   CheckToken -- あり --> ReadCSV[CSVファイル読み込み]
+ *   Start[Start Script] --> CheckToken{JWT_TOKEN<br/>Check Env}
+ *   CheckToken -- No --> ErrorToken[Error: Token Not Set]
+ *   CheckToken -- Yes --> ReadCSV[Read CSV File]
  *
- * セキュリティ考慮事項:
- * - パスワードはプレーンテキストでCSVに記載し、APIがPBKDF2-SHA256でハッシュ化
- * - CSVファイルは実行後、安全に削除または暗号化保存を推奨
+ * Security Considerations:
+ * - Passwords should be plain text in CSV, hashed by API with PBKDF2-SHA256
+ * - CSV file should be securely deleted or encrypted after execution
  */`;
     const result = parser.parse(code);
     expect(Result.isOk(result)).toBe(true);
@@ -260,11 +259,11 @@ line7`;
       expect(result.value.length).toBe(1);
       const mermaidCode = result.value[0].code;
       expect(mermaidCode).toContain('graph TD');
-      expect(mermaidCode).toContain('Start[スクリプト開始]');
+      expect(mermaidCode).toContain('Start[Start Script]');
       expect(mermaidCode).toContain('CheckToken{JWT_TOKEN');
       // Should not contain the security considerations text
-      expect(mermaidCode).not.toContain('セキュリティ考慮事項');
-      expect(mermaidCode).not.toContain('パスワードはプレーンテキスト');
+      expect(mermaidCode).not.toContain('Security Considerations');
+      expect(mermaidCode).not.toContain('Passwords should be plain text');
     }
   });
 });

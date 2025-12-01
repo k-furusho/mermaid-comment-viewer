@@ -26,7 +26,7 @@ export abstract class BaseCommentParser implements ICommentParser {
   ];
 
   protected readonly docPatterns = [
-    /^(セキュリティ考慮事項|Security|環境変数|Environment|使用方法|Usage|CSVフォーマット|CSV Format|注意事項|Notes?|参考|References?):/i,
+    /^(セキュリティ考慮事項|Security|Security Considerations|環境変数|Environment|使用方法|Usage|CSVフォーマット|CSV Format|注意事項|Notes?|参考|References?):/i,
     /^##?\s+/,
     /^[A-Z][a-z]+:/, // Section headers like "Usage:", "Note:"
   ];
