@@ -214,4 +214,57 @@ line7`;
       expect(result.value[0].code).toContain('B[');
     }
   });
+
+  it('should parse Mermaid: keyword format', () => {
+    const code = `/**
+ * ユーザー一括作成スクリプト
+ *
+ * CSVファイルから複数のユーザーアカウントを一括作成します。
+ *
+ * Mermaid:
+ * graph TD
+ *   Start[スクリプト開始] --> CheckToken{JWT_TOKEN<br/>環境変数確認}
+ *   CheckToken -- なし --> ErrorToken[エラー: トークン未設定]
+ *   CheckToken -- あり --> ReadCSV[CSVファイル読み込み]
+ */`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      expect(result.value.length).toBe(1);
+      const mermaidCode = result.value[0].code;
+      expect(mermaidCode).toContain('graph TD');
+      expect(mermaidCode).toContain('Start[スクリプト開始]');
+      expect(mermaidCode).toContain('CheckToken{JWT_TOKEN');
+    }
+  });
+
+  it('should parse Mermaid: keyword format and exclude following documentation', () => {
+    const code = `/**
+ * ユーザー一括作成スクリプト
+ *
+ * CSVファイルから複数のユーザーアカウントを一括作成します。
+ *
+ * Mermaid:
+ * graph TD
+ *   Start[スクリプト開始] --> CheckToken{JWT_TOKEN<br/>環境変数確認}
+ *   CheckToken -- なし --> ErrorToken[エラー: トークン未設定]
+ *   CheckToken -- あり --> ReadCSV[CSVファイル読み込み]
+ *
+ * セキュリティ考慮事項:
+ * - パスワードはプレーンテキストでCSVに記載し、APIがPBKDF2-SHA256でハッシュ化
+ * - CSVファイルは実行後、安全に削除または暗号化保存を推奨
+ */`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      expect(result.value.length).toBe(1);
+      const mermaidCode = result.value[0].code;
+      expect(mermaidCode).toContain('graph TD');
+      expect(mermaidCode).toContain('Start[スクリプト開始]');
+      expect(mermaidCode).toContain('CheckToken{JWT_TOKEN');
+      // Should not contain the security considerations text
+      expect(mermaidCode).not.toContain('セキュリティ考慮事項');
+      expect(mermaidCode).not.toContain('パスワードはプレーンテキスト');
+    }
+  });
 });

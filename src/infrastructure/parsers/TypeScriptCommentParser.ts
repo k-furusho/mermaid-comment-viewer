@@ -1,67 +1,45 @@
 import type { CodeRange } from '../../domain/entities/CodeRange';
-import { CodeRange as CR } from '../../domain/entities/CodeRange';
-import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
 import type { MermaidCode } from '../../domain/types/BrandedTypes';
-import { LineNumber as LN, MermaidCode as MC } from '../../domain/types/BrandedTypes';
 import type { Result } from '../../domain/types/Result';
 import { Result as R } from '../../domain/types/Result';
+import { BaseCommentParser, ParseError } from './BaseCommentParser';
 
-class ParseError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ParseError';
-  }
-}
-
-export class TypeScriptCommentParser implements ICommentParser {
-  // Support both "mermaid" and "@mermaid" patterns
+export class TypeScriptCommentParser extends BaseCommentParser {
+  // Support "mermaid", "@mermaid", and "Mermaid:" patterns
   // Matches: /* mermaid ... */, /* @mermaid ... */, /** mermaid ... */, /** * @mermaid ... */
   // Also matches: /** * * @mermaid ... */ (multiple asterisks before @mermaid)
   // Also matches: /**\n * * @mermaid ... */ (with newline after /**)
-  // The pattern allows any content before @mermaid within the comment block
-  // Ensures "mermaid" is at the start (after /* or /**), at the start of a line (after optional asterisks), or after @
+  // Also matches: /** * Mermaid: ... */ (with Mermaid: keyword)
   private readonly blockCommentPattern =
-    /\/\*\*?(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)mermaid))\s*\n?([\s\S]*?)\*\//gi;
+    /\/\*\*?(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?([\s\S]*?)\*\//gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {
+      const validation = this.validateTextLength(text);
+      if (R.isErr(validation)) {
+        return validation;
+      }
+
       const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
-      // block comment pattern
-      const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
+      const blockMatches = this.getMatches(text);
 
-      for (const match of blockMatches) {
-        let rawCode = match[1];
+      if (R.isErr(blockMatches)) {
+        return blockMatches;
+      }
 
-        if (rawCode) {
-          // Remove leading asterisks and whitespace from each line
-          rawCode = rawCode
-            .split('\n')
-            .map((line) => line.replace(/^\s*\*\s?/, '').trimEnd())
-            .join('\n');
+      const matches = blockMatches.ok ? blockMatches.value : [];
 
-          // trim the code and remove extra whitespace
-          const code = rawCode.trim();
+      for (const match of matches) {
+        if (!match || match.index === undefined || !match[0] || !match[1]) {
+          continue;
+        }
 
-          // skip invalid Mermaid code (contains JSON syntax)
-          if (code.includes('"mermaidInlineViewer') || code.includes('": {')) {
-            continue;
-          }
+        const rawCode = match[1];
+        if (!rawCode) continue;
 
-          const codeResult = MC.create(code);
-          if (R.isOk(codeResult)) {
-            const startLine = this.getLineNumber(text, match.index ?? 0);
-            const endLine = this.getLineNumber(text, (match.index ?? 0) + match[0].length);
-
-            const startLN = LN.create(startLine);
-            const endLN = LN.create(endLine);
-
-            if (R.isOk(startLN) && R.isOk(endLN)) {
-              const rangeResult = CR.create(startLN.value, endLN.value);
-              if (R.isOk(rangeResult)) {
-                results.push({ code: codeResult.value, range: rangeResult.value });
-              }
-            }
-          }
+        const result = this.processMatchResult(text, match, rawCode);
+        if (result) {
+          results.push(result);
         }
       }
 
@@ -71,7 +49,27 @@ export class TypeScriptCommentParser implements ICommentParser {
     }
   }
 
-  private getLineNumber(text: string, index: number): number {
-    return text.substring(0, index).split('\n').length - 1;
+  private getMatches(text: string): Result<RegExpMatchArray[], ParseError> {
+    try {
+      this.blockCommentPattern.lastIndex = 0;
+      const matches = Array.from(text.matchAll(this.blockCommentPattern));
+      return R.ok(matches);
+    } catch (regexError) {
+      return R.err(new ParseError(`Regex error: ${regexError instanceof Error ? regexError.message : 'Unknown regex error'}`));
+    } finally {
+      this.blockCommentPattern.lastIndex = 0;
+    }
+  }
+
+  /**
+   * Override cleanCode to handle asterisks in block comments specifically for JS/TS
+   */
+  protected override cleanCode(rawCode: string): string {
+    // First, strip the leading asterisks and whitespace
+    const lines = rawCode.split('\n');
+    const strippedLines = lines.map((line) => line.replace(/^\s*\*\s?/, '').trimEnd());
+
+    // Then use the base logic to extract Mermaid block
+    return this.extractMermaidBlock(strippedLines);
   }
 }

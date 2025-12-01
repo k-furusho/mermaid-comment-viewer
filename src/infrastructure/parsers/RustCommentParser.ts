@@ -1,53 +1,57 @@
 import type { CodeRange } from '../../domain/entities/CodeRange';
-import { CodeRange as CR } from '../../domain/entities/CodeRange';
-import type { ICommentParser } from '../../domain/interfaces/ICommentParser';
 import type { MermaidCode } from '../../domain/types/BrandedTypes';
-import { LineNumber as LN, MermaidCode as MC } from '../../domain/types/BrandedTypes';
 import type { Result } from '../../domain/types/Result';
 import { Result as R } from '../../domain/types/Result';
+import { BaseCommentParser, ParseError } from './BaseCommentParser';
 
-class ParseError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ParseError';
-  }
-}
-
-export class RustCommentParser implements ICommentParser {
-  // Block comment pattern for Rust - Support both "mermaid" and "@mermaid"
+export class RustCommentParser extends BaseCommentParser {
+  // Block comment pattern for Rust - Support "mermaid", "@mermaid", and "Mermaid:"
   // Matches: /* mermaid ... */, /* @mermaid ... */, /*\n * @mermaid ... */
   private readonly blockCommentPattern =
-    /\/\*(?:\s*\n\s*(?:\*\s*)*)?@?mermaid\s*\n?([\s\S]*?)\*\//g;
-  // Doc comment pattern for Rust (//! style)
-  private readonly docCommentPattern = /\/\/!\s*@?mermaid\s*\n((?:\/\/!.*\n)+)/g;
-  // remove //! prefix from each line
-  public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
-    const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
+    /\/\*(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?([\s\S]*?)\*\//gi;
 
+  // Doc comment pattern for Rust (//! style) - Support "mermaid", "@mermaid", and "Mermaid:"
+  private readonly docCommentPattern = /\/\/!\s*(?:@?mermaid|Mermaid:)\s*\n((?:\/\/!.*\n)+)/gi;
+
+  public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {
+      const validation = this.validateTextLength(text);
+      if (R.isErr(validation)) {
+        return validation;
+      }
+
+      const results: Array<{ code: MermaidCode; range: CodeRange }> = [];
+
+      // Parse block comments
       const blockMatches = Array.from(text.matchAll(this.blockCommentPattern));
       for (const match of blockMatches) {
-        let code = match[1];
-        if (code) {
-          // Remove leading asterisks and whitespace from each line
-          code = code
-            .split('\n')
-            .map((line) => line.replace(/^\s*\*\s?/, '').trimEnd())
-            .join('\n');
-          this.processMatch(text, match, code, results);
+        if (!match[1]) continue;
+        const result = this.processMatchResult(text, match, match[1]);
+        if (result) {
+          results.push(result);
         }
       }
 
+      // Parse doc comments
       const docMatches = Array.from(text.matchAll(this.docCommentPattern));
       for (const match of docMatches) {
         let code = match[1];
         if (code) {
-          // remove //! prefix from each line
+          // Special handling for doc comments: remove //! prefix BEFORE standard cleaning
           code = code
             .split('\n')
             .map((line) => line.replace(/^\/\/!\s?/, ''))
             .join('\n');
-          this.processMatch(text, match, code, results);
+
+          // Note: match.index might need adjustment if we were stricter, but for ranges it's usually fine
+          // provided we map back to original text lines.
+          // However, standard processMatchResult calls cleanCode again.
+          // Since we already cleaned the prefixes, standard cleanCode will just do indentation and mermaid block extraction.
+
+          const result = this.processMatchResult(text, match, code);
+          if (result) {
+            results.push(result);
+          }
         }
       }
 
@@ -57,32 +61,12 @@ export class RustCommentParser implements ICommentParser {
     }
   }
 
-  private processMatch(
-    text: string,
-    match: RegExpMatchArray,
-    rawCode: string,
-    results: Array<{ code: MermaidCode; range: CodeRange }>
-  ): void {
-    // trim the code and remove extra whitespace
-    const code = rawCode.trim();
-    const codeResult = MC.create(code);
-    if (R.isOk(codeResult)) {
-      const startLine = this.getLineNumber(text, match.index ?? 0);
-      const endLine = this.getLineNumber(text, (match.index ?? 0) + match[0].length);
+  protected override cleanCode(rawCode: string): string {
+    // For block comments, strip asterisks.
+    // For doc comments, we already stripped //! in the loop, so this regex won't match much there, which is fine.
+    const lines = rawCode.split('\n');
+    const strippedLines = lines.map((line) => line.replace(/^\s*\*\s?/, '').trimEnd());
 
-      const startLN = LN.create(startLine);
-      const endLN = LN.create(endLine);
-
-      if (R.isOk(startLN) && R.isOk(endLN)) {
-        const rangeResult = CR.create(startLN.value, endLN.value);
-        if (R.isOk(rangeResult)) {
-          results.push({ code: codeResult.value, range: rangeResult.value });
-        }
-      }
-    }
-  }
-
-  private getLineNumber(text: string, index: number): number {
-    return text.substring(0, index).split('\n').length - 1;
+    return this.extractMermaidBlock(strippedLines);
   }
 }
