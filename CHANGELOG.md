@@ -2,6 +2,19 @@
 
 All notable changes to the "mermaid-comment-viewer" extension will be documented in this file.
 
+## [1.0.1] - 2025-12-01
+
+### Features
+- Enhanced `Mermaid:` keyword support across all languages (TypeScript, Python, Go, Rust)
+- Improved comment parsing logic to exclude documentation headers (e.g., "Usage:", "Security Considerations:")
+- Added safety checks for text length and regex handling to prevent crashes
+
+### Technical
+- Refactored parsing logic with `BaseCommentParser` for consistent behavior
+- Decoupled HTML rendering logic into `WebviewRenderer`
+- Improved test stability by adjusting Vitest configuration
+- Removed Confluence copy button (temporarily)
+
 ## [1.0.0] - 2025-11-26
 
 ### Features

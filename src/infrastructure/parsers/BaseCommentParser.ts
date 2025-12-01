@@ -35,7 +35,9 @@ export abstract class BaseCommentParser implements ICommentParser {
    * Parse the text to find Mermaid diagrams.
    * This method must be implemented by subclasses to define language-specific parsing logic.
    */
-  public abstract parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError>;
+  public abstract parse(
+    text: string
+  ): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError>;
 
   /**
    * Validate the text length to prevent regex DoS attacks.
@@ -133,11 +135,11 @@ export abstract class BaseCommentParser implements ICommentParser {
   }
 
   protected isMermaidStart(line: string): boolean {
-    return this.mermaidStartPatterns.some(pattern => pattern.test(line));
+    return this.mermaidStartPatterns.some((pattern) => pattern.test(line));
   }
 
   protected isDocHeader(line: string): boolean {
-    return this.docPatterns.some(pattern => pattern.test(line));
+    return this.docPatterns.some((pattern) => pattern.test(line));
   }
 
   protected isInvalidCode(code: string): boolean {
@@ -146,7 +148,11 @@ export abstract class BaseCommentParser implements ICommentParser {
     return false;
   }
 
-  protected createCodeRange(text: string, matchIndex: number, matchLength: number): Result<CodeRange, ParseError> {
+  protected createCodeRange(
+    text: string,
+    matchIndex: number,
+    matchLength: number
+  ): Result<CodeRange, ParseError> {
     if (matchIndex < 0 || matchIndex >= text.length || matchLength <= 0) {
       return R.err(new ParseError('Invalid match index'));
     }
@@ -201,10 +207,9 @@ export abstract class BaseCommentParser implements ICommentParser {
 
     // Safety check: Explicitly verify ok state for TS compiler (though implied by isErr check above)
     if (!rangeResult.ok || !codeResult.ok) {
-       return null;
+      return null;
     }
 
     return { code: codeResult.value, range: rangeResult.value };
   }
 }
-

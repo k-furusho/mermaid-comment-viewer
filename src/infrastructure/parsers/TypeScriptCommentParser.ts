@@ -55,7 +55,11 @@ export class TypeScriptCommentParser extends BaseCommentParser {
       const matches = Array.from(text.matchAll(this.blockCommentPattern));
       return R.ok(matches);
     } catch (regexError) {
-      return R.err(new ParseError(`Regex error: ${regexError instanceof Error ? regexError.message : 'Unknown regex error'}`));
+      return R.err(
+        new ParseError(
+          `Regex error: ${regexError instanceof Error ? regexError.message : 'Unknown regex error'}`
+        )
+      );
     } finally {
       this.blockCommentPattern.lastIndex = 0;
     }
