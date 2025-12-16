@@ -2,6 +2,15 @@
 
 All notable changes to the "mermaid-comment-viewer" extension will be documented in this file.
 
+## [1.0.3] - 2025-12-16
+
+### Features
+- Added support for TSX (`.tsx`) and JSX (`.jsx`) files
+- Mermaid diagrams in React component files are now detected and visualized
+- CodeLens and Hover providers now work in React files
+
+---
+
 ## [1.0.2] - 2025-12-01
 
 ### Improvements
