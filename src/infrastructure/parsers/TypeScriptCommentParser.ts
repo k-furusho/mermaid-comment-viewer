@@ -10,8 +10,10 @@ export class TypeScriptCommentParser extends BaseCommentParser {
   // Also matches: /** * * @mermaid ... */ (multiple asterisks before @mermaid)
   // Also matches: /**\n * * @mermaid ... */ (with newline after /**)
   // Also matches: /** * Mermaid: ... */ (with Mermaid: keyword)
+  // Also matches: Documentation before @mermaid (e.g., JSDoc with description followed by @mermaid)
+  // Uses (?:[^*]|\*(?!\/))*? to avoid crossing comment boundaries
   private readonly blockCommentPattern =
-    /\/\*\*?(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?([\s\S]*?)\*\//gi;
+    /\/\*\*?(?:\s*@?mermaid|(?:[^*]|\*(?!\/))*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?((?:[^*]|\*(?!\/))*?)\*\//gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {

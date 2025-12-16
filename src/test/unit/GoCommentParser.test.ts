@@ -171,4 +171,66 @@ line7`;
       expect(range.end as number).toBeGreaterThan(range.start as number);
     }
   });
+
+  it('should not cross comment boundaries - separate comments before @mermaid block', () => {
+    const code = `
+/* コメント1 */
+type Config struct {}
+
+/* コメント2: 設定用 */
+type Settings struct {}
+
+/*
+ * @mermaid
+ * graph TD
+ *   A[Start] --> B[End]
+ */
+func main() {}`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      expect(result.value.length).toBe(1);
+      const mermaidCode = result.value[0].code;
+      expect(mermaidCode).toContain('graph TD');
+      expect(mermaidCode).not.toContain('コメント1');
+      expect(mermaidCode).not.toContain('コメント2');
+      expect(result.value[0].range.start).toBeGreaterThan(4);
+    }
+  });
+
+  it('should correctly parse multiple mermaid blocks with interleaved regular comments', () => {
+    const code = `
+/* 通常コメント1 */
+type Config struct {}
+
+/*
+ * @mermaid
+ * graph TD
+ *   A[First] --> B[Diagram]
+ */
+func first() {}
+
+/* 通常コメント2 */
+var value = 1
+
+/*
+ * @mermaid
+ * sequenceDiagram
+ *   User->>API: Request
+ */
+func second() {}
+
+/* 通常コメント3 */
+var end = true`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      expect(result.value.length).toBe(2);
+      expect(result.value[0].code).toContain('graph TD');
+      expect(result.value[0].code).not.toContain('通常コメント');
+      expect(result.value[1].code).toContain('sequenceDiagram');
+      expect(result.value[1].code).not.toContain('通常コメント');
+      expect(result.value[0].range.start).toBeLessThan(result.value[1].range.start as number);
+    }
+  });
 });

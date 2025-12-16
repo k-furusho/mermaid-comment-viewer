@@ -7,8 +7,9 @@ import { BaseCommentParser, ParseError } from './BaseCommentParser';
 export class GoCommentParser extends BaseCommentParser {
   // Block comment pattern for Go - Support "mermaid", "@mermaid", and "Mermaid:"
   // Matches: /* mermaid ... */, /* @mermaid ... */, /*\n * @mermaid ... */
+  // Uses (?:[^*]|\*(?!\/))*? to avoid crossing comment boundaries
   private readonly blockCommentPattern =
-    /\/\*(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?([\s\S]*?)\*\//gi;
+    /\/\*(?:\s*@?mermaid|(?:[^*]|\*(?!\/))*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?((?:[^*]|\*(?!\/))*?)\*\//gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {

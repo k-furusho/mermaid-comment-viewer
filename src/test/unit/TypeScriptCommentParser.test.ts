@@ -266,4 +266,116 @@ line7`;
       expect(mermaidCode).not.toContain('Passwords should be plain text');
     }
   });
+
+  it('should not cross comment boundaries - separate JSDoc before @mermaid block', () => {
+    // This test ensures the regex doesn't match from one comment block to @mermaid in another
+    const code = `
+interface Props {
+  /** システムエラー用 */
+  errors: string[];
+  /** バリデーションエラー用 */
+  lineErrors?: string[];
+}
+
+/**
+ * DryRunError - エラー表示モジュール
+ *
+ * @mermaid
+ * graph TD
+ *   A[Start] --> B[End]
+ */
+function Component() {}`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      // Should only find 1 mermaid block, not match from /** システムエラー用 */
+      expect(result.value.length).toBe(1);
+      const mermaidCode = result.value[0].code;
+      expect(mermaidCode).toContain('graph TD');
+      expect(mermaidCode).toContain('A[Start]');
+      // Should NOT contain content from other comments
+      expect(mermaidCode).not.toContain('システムエラー');
+      expect(mermaidCode).not.toContain('バリデーションエラー');
+      // Verify range starts at the correct line (around line 10, not line 3)
+      expect(result.value[0].range.start).toBeGreaterThan(5);
+    }
+  });
+
+  it('should handle multiple small JSDoc comments before @mermaid comment', () => {
+    const code = `
+/** Comment 1 */
+const a = 1;
+
+/** Comment 2 */
+const b = 2;
+
+/** Comment 3 */
+const c = 3;
+
+/**
+ * @mermaid
+ * sequenceDiagram
+ *   A->>B: Hello
+ */
+function test() {}`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      expect(result.value.length).toBe(1);
+      expect(result.value[0].code).toContain('sequenceDiagram');
+      expect(result.value[0].code).not.toContain('Comment 1');
+      expect(result.value[0].code).not.toContain('Comment 2');
+      expect(result.value[0].code).not.toContain('Comment 3');
+    }
+  });
+
+  it('should correctly parse multiple mermaid blocks with interleaved regular comments', () => {
+    const code = `
+/** 通常コメント1 */
+interface Config {}
+
+/**
+ * @mermaid
+ * graph TD
+ *   A[First] --> B[Diagram]
+ */
+function first() {}
+
+/** 通常コメント2: 説明 */
+const value = 1;
+
+/** 通常コメント3 */
+type MyType = string;
+
+/**
+ * Second diagram
+ * @mermaid
+ * sequenceDiagram
+ *   User->>API: Request
+ *   API-->>User: Response
+ */
+function second() {}
+
+/** 通常コメント4 */
+const end = true;`;
+    const result = parser.parse(code);
+    expect(Result.isOk(result)).toBe(true);
+    if (Result.isOk(result)) {
+      // Should find exactly 2 mermaid blocks
+      expect(result.value.length).toBe(2);
+
+      // First mermaid block
+      expect(result.value[0].code).toContain('graph TD');
+      expect(result.value[0].code).toContain('A[First]');
+      expect(result.value[0].code).not.toContain('通常コメント');
+
+      // Second mermaid block
+      expect(result.value[1].code).toContain('sequenceDiagram');
+      expect(result.value[1].code).toContain('User->>API');
+      expect(result.value[1].code).not.toContain('通常コメント');
+
+      // Verify ranges are in correct order
+      expect(result.value[0].range.start).toBeLessThan(result.value[1].range.start as number);
+    }
+  });
 });
