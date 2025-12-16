@@ -10,7 +10,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   vscode.window.showInformationMessage('🎉 Mermaid Comment Viewer activated!');
 
-  const supportedLanguages = ['typescript', 'javascript', 'python', 'go', 'rust'];
+  const supportedLanguages = ['typescript', 'typescriptreact', 'javascript', 'javascriptreact', 'python', 'go', 'rust'];
 
   // Register Hover Provider
   const hoverProvider = new MermaidHoverProvider();
