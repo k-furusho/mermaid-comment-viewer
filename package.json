@@ -2,7 +2,7 @@
   "name": "mermaid-comment-viewer",
   "displayName": "Mermaid Comment Viewer",
   "description": "Visualize Mermaid diagrams from code comments with CodeLens, Hover, and an interactive Preview Panel (Zoom/Pan supported).",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "k-furusho",
   "author": {
     "name": "k-furusho"

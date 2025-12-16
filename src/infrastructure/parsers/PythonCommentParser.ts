@@ -7,8 +7,11 @@ import { BaseCommentParser, ParseError } from './BaseCommentParser';
 export class PythonCommentParser extends BaseCommentParser {
   // Triple quotes docstring patterns (both """ and ''') - Support "mermaid", "@mermaid", and "Mermaid:"
   // Pattern allows any content before mermaid keyword (for docstrings with descriptions)
-  private readonly doubleQuotePattern = /"""[\s\S]*?(?:@?mermaid|Mermaid:)\s*\n([\s\S]*?)"""/gi;
-  private readonly singleQuotePattern = /'''[\s\S]*?(?:@?mermaid|Mermaid:)\s*\n([\s\S]*?)'''/gi;
+  // Uses (?:[^"]|"(?!""))*? to avoid crossing docstring boundaries
+  private readonly doubleQuotePattern =
+    /"""(?:[^"]|"(?!""))*?(?:@?mermaid|Mermaid:)\s*\n((?:[^"]|"(?!""))*?)"""/gi;
+  private readonly singleQuotePattern =
+    /'''(?:[^']|'(?!''))*?(?:@?mermaid|Mermaid:)\s*\n((?:[^']|'(?!''))*?)'''/gi;
 
   public parse(text: string): Result<Array<{ code: MermaidCode; range: CodeRange }>, ParseError> {
     try {

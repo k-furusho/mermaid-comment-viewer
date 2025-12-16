@@ -7,8 +7,9 @@ import { BaseCommentParser, ParseError } from './BaseCommentParser';
 export class RustCommentParser extends BaseCommentParser {
   // Block comment pattern for Rust - Support "mermaid", "@mermaid", and "Mermaid:"
   // Matches: /* mermaid ... */, /* @mermaid ... */, /*\n * @mermaid ... */
+  // Uses (?:[^*]|\*(?!\/))*? to avoid crossing comment boundaries
   private readonly blockCommentPattern =
-    /\/\*(?:\s*@?mermaid|[\s\S]*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?([\s\S]*?)\*\//gi;
+    /\/\*(?:\s*@?mermaid|(?:[^*]|\*(?!\/))*?(?:@mermaid|(?:\n\s*\*?\s*)(?:mermaid|Mermaid:)))\s*\n?((?:[^*]|\*(?!\/))*?)\*\//gi;
 
   // Doc comment pattern for Rust (//! style) - Support "mermaid", "@mermaid", and "Mermaid:"
   private readonly docCommentPattern = /\/\/!\s*(?:@?mermaid|Mermaid:)\s*\n((?:\/\/!.*\n)+)/gi;

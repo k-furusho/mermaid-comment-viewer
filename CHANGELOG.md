@@ -2,6 +2,17 @@
 
 All notable changes to the "mermaid-comment-viewer" extension will be documented in this file.
 
+## [1.0.4] - 2025-12-16
+
+### Bug Fixes
+- Fixed regex pattern crossing comment block boundaries
+- Preview button now correctly appears on the `@mermaid` comment block, not on preceding unrelated comments
+- Applied fix to all parsers: TypeScript, Go, Rust, Python
+
+### Testing
+- Added 9 new tests for comment boundary validation (74 total tests)
+- Comprehensive coverage for multi-mermaid blocks with interleaved regular comments
+
 ## [1.0.3] - 2025-12-16
 
 ### Features

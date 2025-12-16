@@ -4,7 +4,14 @@ export type Brand<T, B> = T & { readonly [brand]: B };
 
 export type MermaidCode = Brand<string, 'MermaidCode'>;
 export type LineNumber = Brand<number, 'LineNumber'>;
-export type Language = 'typescript' | 'typescriptreact' | 'javascript' | 'javascriptreact' | 'python' | 'go' | 'rust';
+export type Language =
+  | 'typescript'
+  | 'typescriptreact'
+  | 'javascript'
+  | 'javascriptreact'
+  | 'python'
+  | 'go'
+  | 'rust';
 
 import type { Result as ResultType } from './Result';
 import { Result } from './Result';
