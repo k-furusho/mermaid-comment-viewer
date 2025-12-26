@@ -4,6 +4,11 @@ import { WebviewService } from './infrastructure/services/WebviewService';
 import { MermaidCodeLensProvider } from './presentation/providers/CodeLensProvider';
 import { MermaidHoverProvider } from './presentation/providers/HoverProvider';
 
+/**
+ * Initialize the extension: set up the WebviewService, register hover and CodeLens providers for supported languages, register preview and refresh commands, and attach document/editor listeners for real-time preview updates.
+ *
+ * This registers disposables on the provided extension `context` so they are cleaned up on deactivation, and displays an activation message when invoked.
+ */
 export function activate(context: vscode.ExtensionContext): void {
   // Initialize WebviewService with extension context
   WebviewService.getInstance().initialize(context);
